@@ -22,7 +22,6 @@
                 </form>
                 <field name="partner_id" position="after">
                     <field name="activity_description" />
-                      <field name="partner_turn" domain="[('partner_ids', '=', partner_id)]" options="{'no_create': True}" invisible="True"/>
                       <field name="currency_id"/>
                 </field>
 
@@ -65,10 +64,6 @@
                     </field>
                 </page>
 
-                <field name="company_id" position="after">
-                    <field name="turn_issuer"
-                           options="{'no_create': True}"/>
-                </field>
                 <field name="name" position="after">
                         <label string="- Next Number: " attrs="{'invisible': ['|',('name','!=',False),('state','!=','draft')]}" class="oe_inline"/>
                         <field name="next_number" attrs="{'invisible': ['|',('name','!=',False),('state','!=','draft')]}" class="oe_inline"/>
