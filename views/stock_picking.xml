@@ -22,7 +22,7 @@
                 </form>
                 <field name="partner_id" position="after">
                     <field name="activity_description" />
-                      <field name="currency_id"/>
+                      <field name="currency_id" groups="base.group_multi_currency" options="{'no_create': True}"/>
                 </field>
 
                 <field name="origin" position="after">
@@ -44,7 +44,6 @@
                     <field name="amount_untaxed"/>
                     <field name="amount_tax"/>
                     <field name="amount_total" />
-                    <field name="currency_id" invisible="1"/>
                   </group>
                 </field>
                 <page name="extra" position="inside">

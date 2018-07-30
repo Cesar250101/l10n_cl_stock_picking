@@ -2,6 +2,8 @@
 
 from odoo import fields, models, api, _
 from odoo.exceptions import UserError
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT as DTF
+from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DF
 from datetime import datetime, timedelta, date
 import logging
 from lxml import etree
@@ -350,7 +352,7 @@ version="1.0">
         IdDoc= collections.OrderedDict()
         IdDoc['TipoDTE'] = self.location_id.sii_document_class_id.sii_code
         IdDoc['Folio'] = self.get_folio()
-        IdDoc['FchEmis'] = self.scheduled_date[:10]
+        IdDoc['FchEmis'] = fields.Datetime.context_timestamp(self.with_context(tz='America/Santiago'), fields.Datetime.from_string(self.scheduled_date)).strftime(DF)
         if self.transport_type and self.transport_type not in ['0']:
             IdDoc['TipoDespacho'] = self.transport_type
         IdDoc['IndTraslado'] = self.move_reason
@@ -458,7 +460,7 @@ version="1.0">
         result['TED']['DD']['RE'] = RutEmisor
         result['TED']['DD']['TD'] = self.location_id.sii_document_class_id.sii_code
         result['TED']['DD']['F']  = self.get_folio()
-        result['TED']['DD']['FE'] = self.scheduled_date[:10]
+        result['TED']['DD']['FE'] = fields.Datetime.context_timestamp(self.with_context(tz='America/Santiago'), fields.Datetime.from_string(self.scheduled_date)).strftime(DF)
         if not partner_id.commercial_partner_id.vat:
             raise UserError(_("Fill Partner VAT"))
         result['TED']['DD']['RR'] = self.format_vat(partner_id.commercial_partner_id.vat)
@@ -478,7 +480,8 @@ version="1.0">
             raise UserError(_('NO coincide el Dueño del CAF : %s con el emisor Seleccionado: %s' %(result['TED']['DD']['CAF']['DA']['RE'], RutEmisor)))
         dte = result['TED']['DD']
         timestamp = self.time_stamp()
-        if date( int(timestamp[:4]), int(timestamp[5:7]), int(timestamp[8:10])) < date(int(self.date[:4]), int(self.date[5:7]), int(self.date[8:10])):
+        picking_date = fields.Datetime.context_timestamp(self.with_context(tz='America/Santiago'), fields.Datetime.from_string(self.date)).strftime(DTF)
+        if date( int(timestamp[:4]), int(timestamp[5:7]), int(timestamp[8:10])) < date(int(picking_date[:4]), int(picking_date[5:7]), int(picking_date[8:10])):
             raise UserError("La fecha de timbraje no puede ser menor a la fecha de emisión del documento")
         dte['TSTED'] = timestamp
         dicttoxml.set_debug(False)
@@ -714,7 +717,7 @@ version="1.0">
             url = server_url[r.company_id.dte_service_provider] + 'QueryEstDte.jws?WSDL'
             _server = Client(url)
             receptor = r.format_vat(partner_id.commercial_partner_id.vat)
-            scheduled_date = datetime.strptime(r.scheduled_date[:10], "%Y-%m-%d").strftime("%d-%m-%Y")
+            scheduled_date = fields.Datetime.context_timestamp(r.with_context(tz='America/Santiago'), fields.Datetime.from_string(r.scheduled_date)).strftime("%d-%m-%Y")
             total = str(int(round(r.amount_total,0)))
             sii_code = str(r.location_id.sii_document_class_id.sii_code)
             respuesta = _server.service.getEstDte(signature_d['subject_serial_number'][:8],
