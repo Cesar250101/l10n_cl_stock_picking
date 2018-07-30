@@ -6,9 +6,6 @@ from datetime import datetime, timedelta, date
 import logging
 from lxml import etree
 from lxml.etree import Element, SubElement
-from lxml import objectify
-from lxml.etree import XMLSyntaxError
-from odoo import SUPERUSER_ID
 
 import pytz
 from six import string_types
@@ -64,7 +61,7 @@ except ImportError:
 
 # timbre patrón. Permite parsear y formar el
 # ordered-dict patrón corespondiente al documento
-timbre  = """<TED version="1.0"><DD><RE>99999999-9</RE><TD>11</TD><F>1</F>\
+timbre = """<TED version="1.0"><DD><RE>99999999-9</RE><TD>11</TD><F>1</F>\
 <FE>2000-01-01</FE><RR>99999999-9</RR><RSR>\
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</RSR><MNT>10000</MNT><IT1>IIIIIII\
 </IT1><CAF version="1.0"><DA><RE>99999999-9</RE><RS>YYYYYYYYYYYYYYY</RS>\
@@ -99,6 +96,7 @@ connection_status = {
     '9': 'Sistema Bloqueado',
     'Otro': 'Error Interno.',
 }
+
 
 class stock_picking(models.Model):
     _inherit = "stock.picking"
@@ -404,8 +402,8 @@ version="1.0">
         if self.patente:
             Transporte['Patente'] = self.patente[:8]
         elif self.vehicle:
-            Transporte['Patente'] = self.vehicle.matricula or ''
-        if self.transport_type in ['2','3'] and self.chofer:
+            Transporte['Patente'] = self.vehicle.license_plate or ''
+        if self.transport_type in ['2', '3'] and self.chofer:
             if not self.chofer.vat:
                 raise UserError("Debe llenar los datos del chofer")
             if self.transport_type == '2':
