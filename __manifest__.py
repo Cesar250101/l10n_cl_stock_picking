@@ -23,8 +23,8 @@
     'test': [],
     'data': [
         'security/ir.model.access.csv',
-        'views/dte.xml',
         'views/stock_picking.xml',
+        'views/dte.xml',
         'views/layout.xml',
         'views/libro_guias.xml',
         "views/account_invoice.xml",
