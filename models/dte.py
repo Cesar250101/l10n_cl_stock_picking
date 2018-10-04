@@ -669,7 +669,7 @@ version="1.0">
                 dtes,
                 signature_d,SubTotDTE,
             )
-        envio_dte  = self.create_template_env(dtes)
+        envio_dte = self.create_template_env(dtes)
         envio_dte = self.env['account.invoice'].sudo(self.env.user.id).with_context({'company_id': company_id.id}).sign_full_xml(
             envio_dte.replace('<?xml version="1.0" encoding="ISO-8859-1"?>\n', ''),
             'SetDoc',
@@ -737,7 +737,7 @@ version="1.0">
         for r in self:
             if not r.sii_xml_request and not r.sii_xml_request.sii_send_ident:
                 raise UserError('No se ha enviado aún el documento, aún está en cola de envío interna en odoo')
-            if r.sii_xml_request.state not in [ 'Aceptado', 'Rechazado']:
+            if r.sii_xml_request.state not in ['Aceptado', 'Rechazado']:
                 r.sii_xml_request.get_send_status(r.env.user)
         self._get_dte_status()
         self.get_sii_result()
