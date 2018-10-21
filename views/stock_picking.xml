@@ -128,6 +128,7 @@
             <field name="inherit_id" ref="stock.view_location_form"/>
             <field name="arch" type="xml">
                 <field name="usage" position="after">
+                    <field name="restore_mode" />
                     <field name="sii_code"/>
                     <field name="sequence_id"/>
                     <field name="sii_document_class_id" attrs="{'required': [('usage','=','internal')]}"/>

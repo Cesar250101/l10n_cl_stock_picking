@@ -187,6 +187,10 @@ class StockLocation(models.Model):
     sii_code = fields.Char(
             string="Código de Sucursal SII",
         )
+    restore_mode = fields.Boolean(
+        string="Modo Restauración",
+        default=False,
+    )
 
 
 class Referencias(models.Model):
@@ -195,7 +199,7 @@ class Referencias(models.Model):
     origen = fields.Char(
             string="Origin",
         )
-    sii_referencia_TpoDocRef =  fields.Many2one(
+    sii_referencia_TpoDocRef = fields.Many2one(
             'sii.document_class',
             string="SII Reference Document Type",
         )

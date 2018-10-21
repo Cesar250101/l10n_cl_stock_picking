@@ -303,13 +303,13 @@ version="1.0">
     def action_done(self):
         res = super(stock_picking, self).action_done()
         for s in self:
-            if not s.use_documents:
+            if not s.use_documents or s.location_id.restore_mode:
                 continue
             if not s.sii_document_number and s.location_id.sequence_id.is_dte:
                 s.sii_document_number = s.location_id.sequence_id.next_by_id()
                 document_number = (s.location_id.sii_document_class_id.doc_code_prefix or '') + s.sii_document_number
                 s.name = document_number
-            if s.picking_type_id.code in ['outgoing', 'internal']: # @TODO diferenciar si es de salida o entrada para internal
+            if s.picking_type_id.code in ['outgoing', 'internal']:# @TODO diferenciar si es de salida o entrada para internal
                 s.responsable_envio = self.env.uid
                 s.sii_result = 'NoEnviado'
                 s._timbrar()
@@ -459,7 +459,7 @@ version="1.0">
         RutEmisor = self.format_vat(self.company_id.vat)
         result['TED']['DD']['RE'] = RutEmisor
         result['TED']['DD']['TD'] = self.location_id.sii_document_class_id.sii_code
-        result['TED']['DD']['F']  = self.get_folio()
+        result['TED']['DD']['F'] = self.get_folio()
         result['TED']['DD']['FE'] = fields.Datetime.context_timestamp(self.with_context(tz='America/Santiago'), fields.Datetime.from_string(self.scheduled_date)).strftime(DF)
         if not partner_id.commercial_partner_id.vat:
             raise UserError(_("Fill Partner VAT"))
