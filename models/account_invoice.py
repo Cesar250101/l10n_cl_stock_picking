@@ -46,7 +46,7 @@ class PickingToInvoiceD(models.Model):
                 )
                 inv.update({
                         'has_pending_pickings': len(pickings.ids),
-                        'picking_ids': pickings.ids,
+                        'picking_pending_ids': pickings.ids,
                         })
 
     has_pending_pickings = fields.Integer(
@@ -54,7 +54,7 @@ class PickingToInvoiceD(models.Model):
         compute='_get_pending_pickings',
         default=0,
     )
-    picking_ids = fields.Many2many(
+    picking_pending_ids = fields.Many2many(
             "stock.picking",
             string='Invoices',
             compute="_get_pending_pickings",
@@ -80,7 +80,7 @@ class PickingToInvoiceD(models.Model):
 
     @api.multi
     def action_view_pickings(self):
-        picking_ids = self.mapped('picking_ids')
+        picking_pending_ids = self.mapped('picking_pending_ids')
         action = self.env.ref('stock.action_picking_tree_all').read()[0]#cambiar por wizard seleccionable
-        action['domain'] = [('id', 'in', picking_ids.ids)]
+        action['domain'] = [('id', 'in', picking_pending_ids.ids)]
         return action
