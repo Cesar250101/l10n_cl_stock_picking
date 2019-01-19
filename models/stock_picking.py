@@ -169,30 +169,6 @@ class StockPicking(models.Model):
         self.patente = self.vehicle.license_plate
 
 
-class StockLocation(models.Model):
-    _inherit = 'stock.location'
-
-    sii_document_class_id = fields.Many2one(
-            'sii.document_class',
-            string='Document Type',
-            required=False,
-        )
-    sequence_id = fields.Many2one(
-            'ir.sequence',
-            string='Entry Sequence',
-            required=False,
-            help="""This field contains the information related to the numbering \
-            of the documents entries of this document type.""",
-        )
-    sii_code = fields.Char(
-            string="Código de Sucursal SII",
-        )
-    restore_mode = fields.Boolean(
-        string="Modo Restauración",
-        default=False,
-    )
-
-
 class Referencias(models.Model):
     _name = 'stock.picking.referencias'
 
