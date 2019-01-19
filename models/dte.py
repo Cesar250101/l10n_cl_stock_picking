@@ -474,7 +474,7 @@ version="1.0">
                 result['TED']['DD']['IT1'] = self._acortar_str(line.product_id.name.replace('['+line.product_id.default_code+'] ',''),40)
             break
 
-        resultcaf = self.location_id.sequence_id.get_caf_file()
+        resultcaf = self.location_id.sequence_id.get_caf_file(self.get_folio())
         result['TED']['DD']['CAF'] = resultcaf['AUTORIZACION']['CAF']
         if RutEmisor != result['TED']['DD']['CAF']['DA']['RE']:
             raise UserError(_('NO coincide el Dueño del CAF : %s con el emisor Seleccionado: %s' %(result['TED']['DD']['CAF']['DA']['RE'], RutEmisor)))
