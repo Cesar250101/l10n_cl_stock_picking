@@ -370,7 +370,7 @@ version="1.0">
         Emisor['RznSoc'] = self.company_id.partner_id.name
         Emisor['GiroEmis'] = self._acortar_str(self.company_id.activity_description.name, 80)
         Emisor['Telefono'] = self._acortar_str(self.company_id.phone or '', 20)
-        Emisor['CorreoEmisor'] = self.company_id.dte_email_id.name
+        Emisor['CorreoEmisor'] = self.company_id.dte_email_id.name_get()[0][1]
         Emisor['item'] = self._giros_emisor()
         if self.location_id.sii_code:
             Emisor['CdgSIISucur'] = self.location_id.sii_code
@@ -648,10 +648,12 @@ version="1.0">
                 raise UserError("Está combinando compañías")
             company_id = rec.company_id
         file_name = 'T52'
-        dtes=""
+        dtes = ""
         SubTotDTE = ''
         resol_data = self.get_resolution_data(company_id)
         signature_id = self.env.user.get_digital_signature(company_id)
+        if not signature_id:
+            raise UserError(_('''There are not a Signature Cert Available for this user, pleaseupload your signature or tell to someelse.'''))
         RUTEmisor = self.format_vat(company_id.vat)
         NroDte = 0
         for rec_id,  documento in DTEs.items():
