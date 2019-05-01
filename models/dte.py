@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from odoo import fields, models, api, _
 from odoo.exceptions import UserError
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT as DTF
@@ -20,27 +19,10 @@ try:
     from io import BytesIO
 except:
     _logger.warning("no se ha cargado io")
-
 try:
     from suds.client import Client
 except:
     pass
-
-try:
-    import urllib3
-except:
-    pass
-
-try:
-    urllib3.disable_warnings()
-except:
-    pass
-
-try:
-    pool = urllib3.PoolManager()
-except:
-    pass
-
 try:
     import xmltodict
 except ImportError:
@@ -78,12 +60,8 @@ result = xmltodict.parse(timbre)
 
 server_url = {'SIICERT':'https://maullin.sii.cl/DTEWS/','SII':'https://palena.sii.cl/DTEWS/'}
 
-BC = '''-----BEGIN CERTIFICATE-----\n'''
-EC = '''\n-----END CERTIFICATE-----\n'''
-
 # hardcodeamos este valor por ahora
 import os, sys
-USING_PYTHON2 = True if sys.version_info < (3, 0) else False
 xsdpath = os.path.dirname(os.path.realpath(__file__)).replace('/models','/static/xsd/')
 
 connection_status = {
@@ -159,14 +137,6 @@ version="1.0">
 {}</EnvioDTE>'''.format(doc)
         return xml
 
-    def create_template_doc1(self, doc, sign):
-        xml = doc.replace('</DTE>',  sign.decode() + '</DTE>')
-        return xml
-
-    def create_template_env1(self, doc, sign):
-        xml = doc.replace('</EnvioDTE>', sign.decode() + '</EnvioDTE>')
-        return xml
-
     def create_template_seed(self, seed):
         return self.env['account.invoice'].create_template_seed(seed)
 
@@ -228,9 +198,6 @@ version="1.0">
             scale=1,
         )
         return image
-
-    def signmessage(self, texto, key):
-        return self.env['account.invoice'].signmessage(texto, key)
 
     sii_batch_number = fields.Integer(
         copy=False,
@@ -501,7 +468,10 @@ version="1.0">
         keypriv = resultcaf['AUTORIZACION']['RSASK'].replace('\t','')
         root = etree.XML( ddxml )
         ddxml = etree.tostring(root)
-        frmt = self.signmessage(ddxml, keypriv)
+        signature_id = self.env.user.get_digital_signature(self.company_id)
+        if not signature_id:
+            raise UserError(_('''There are not a Signature Cert Available for this user, please upload your signature or tell to some else.'''))
+        frmt = signature_id.generar_firma(ddxml)
         ted = (
             '''<TED version="1.0">{}<FRMT algoritmo="SHA1withRSA">{}\
 </FRMT></TED>''').format(ddxml.decode(), frmt)
@@ -682,7 +652,7 @@ version="1.0">
             'SetDoc',
             'env')
         return {
-                'xml_envio': '<?xml version="1.0" encoding="ISO-8859-1"?>\n' + envio_dte,
+                'xml_envio': '<?xml version="1.0" encoding="ISO-8859-1"?>\n' + envio_dte.decode('ISO-8859-1'),
                 'name': file_name,
                 'company_id': company_id.id,
                 'user_id': self.env.uid,
@@ -718,7 +688,7 @@ version="1.0">
 
     def _get_dte_status(self):
         for r in self:
-            if not r.sii_xml_request or r.sii_xml_request.state not in ['Aceptado', 'Reparo']:
+            if not r.sii_xml_request or r.sii_xml_request.state not in ['Aceptado', 'Reparo', 'Rechazado']:
                 continue
             partner_id = r.partner_id or r.company_id.partner_id
             token = r.sii_xml_request.get_token(self.env.user, r.company_id)
