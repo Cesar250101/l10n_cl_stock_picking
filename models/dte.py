@@ -60,10 +60,6 @@ result = xmltodict.parse(timbre)
 
 server_url = {'SIICERT':'https://maullin.sii.cl/DTEWS/','SII':'https://palena.sii.cl/DTEWS/'}
 
-# hardcodeamos este valor por ahora
-import os, sys
-xsdpath = os.path.dirname(os.path.realpath(__file__)).replace('/models','/static/xsd/')
-
 connection_status = {
     '0': 'Upload OK',
     '1': 'El Sender no tiene permiso para enviar',
@@ -102,27 +98,6 @@ class stock_picking(models.Model):
         tz = pytz.timezone('America/Santiago')
         return datetime.now(tz).strftime(formato)
 
-    def xml_validator(self, some_xml_string, validacion='doc'):
-        validacion_type = {
-            'doc': 'DTE_v10.xsd',
-            'env': 'EnvioDTE_v10.xsd',
-            'recep' : 'Recibos_v10.xsd',
-            'env_recep' : 'EnvioRecibos_v10.xsd',
-            'env_resp': 'RespuestaEnvioDTE_v10.xsd',
-            'sig': 'xmldsignature_v10.xsd'
-        }
-        xsd_file = xsdpath+validacion_type[validacion]
-        try:
-            xmlschema_doc = etree.parse(xsd_file)
-            xmlschema = etree.XMLSchema(xmlschema_doc)
-            xml_doc = etree.fromstring(some_xml_string)
-            result = xmlschema.validate(xml_doc)
-            if not result:
-                xmlschema.assert_(xml_doc)
-            return result
-        except AssertionError as e:
-            raise UserError(_('XML Malformed Error:  %s') % e.args)
-
     def create_template_doc(self, doc):
         xml = '''<DTE xmlns="http://www.sii.cl/SiiDte" version="1.0">
 {}</DTE>'''.format(doc)
@@ -148,13 +123,6 @@ version="1.0">
 
     def get_token(self, seed_file, company_id):
         return self.env['account.invoice'].get_token(seed_file, company_id)
-
-    def ensure_str(self,x, encoding="utf-8", none_ok=False):
-        if none_ok is True and x is None:
-            return x
-        if not isinstance(x, str):
-            x = x.decode(encoding)
-        return x
 
     def get_resolution_data(self, comp_id):
         resolution_data = {
@@ -471,7 +439,7 @@ version="1.0">
         signature_id = self.env.user.get_digital_signature(self.company_id)
         if not signature_id:
             raise UserError(_('''There are not a Signature Cert Available for this user, please upload your signature or tell to some else.'''))
-        frmt = signature_id.generar_firma(ddxml)
+        frmt = signature_id.generar_firma(ddxml, privkey=keypriv)
         ted = (
             '''<TED version="1.0">{}<FRMT algoritmo="SHA1withRSA">{}\
 </FRMT></TED>''').format(ddxml.decode(), frmt)
@@ -652,7 +620,7 @@ version="1.0">
             'SetDoc',
             'env')
         return {
-                'xml_envio': '<?xml version="1.0" encoding="ISO-8859-1"?>\n' + envio_dte.decode('ISO-8859-1'),
+                'xml_envio': '<?xml version="1.0" encoding="ISO-8859-1"?>\n' + envio_dte,
                 'name': file_name,
                 'company_id': company_id.id,
                 'user_id': self.env.uid,

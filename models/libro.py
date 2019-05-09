@@ -38,10 +38,6 @@ except ImportError:
 
 server_url = {'SIICERT':'https://maullin.sii.cl/DTEWS/','SII':'https://palena.sii.cl/DTEWS/'}
 
-# hardcodeamos este valor por ahora
-import os
-xsdpath = os.path.dirname(os.path.realpath(__file__)).replace('/models','/static/xsd/')
-
 connection_status = {
     '0': 'Upload OK',
     '1': 'El Sender no tiene permiso para enviar',
@@ -98,38 +94,6 @@ class LibroGuia(models.Model):
         tz = pytz.timezone('America/Santiago')
         return datetime.now(tz).strftime(formato)
 
-    '''
-    Funcion auxiliar para conversion de codificacion de strings
-     proyecto experimentos_dte
-     @author: Daniel Blanco Martin (daniel[at]blancomartin.cl)
-     @version: 2014-12-01
-    '''
-    def convert_encoding(self, data, new_coding = 'UTF-8'):
-        encoding = cchardet.detect(data)['encoding']
-        if new_coding.upper() != encoding.upper():
-            data = data.decode(encoding, data).encode(new_coding)
-        return data
-
-    def xml_validator(self, some_xml_string, validacion='doc'):
-        validacion_type = {
-            'doc': 'DTE_v10.xsd',
-            'env': 'EnvioDTE_v10.xsd',
-            'sig': 'xmldsignature_v10.xsd',
-            'libro': 'LibroGuia_v10.xsd',
-            'libroS': 'LibroCVS_v10.xsd',
-        }
-        xsd_file = xsdpath+validacion_type[validacion]
-        try:
-            xmlschema_doc = etree.parse(xsd_file)
-            xmlschema = etree.XMLSchema(xmlschema_doc)
-            xml_doc = etree.fromstring(some_xml_string)
-            result = xmlschema.validate(xml_doc)
-            if not result:
-                xmlschema.assert_(xml_doc)
-            return result
-        except AssertionError as e:
-            raise UserError(_('XML Malformed Error:  %s') % e.args)
-
     def get_seed(self, company_id):
         return self.env['account.invoice'].get_seed(company_id)
 
@@ -150,14 +114,12 @@ version="1.0">
     def get_token(self, seed_file, company_id):
         return self.env['account.invoice'].get_token(seed_file, company_id)
 
-    def sign_full_xml(self, message, privkey, cert, uri, type='libro'):
+    def sign_full_xml(self, message, uri, type='libro'):
         user_id = self.env.user
         signature_id = user_id.get_digital_signature(self.company_id)
         if not signature_id:
             raise UserError(_('''There are not a Signature Cert Available for this user, please upload your signature or tell to someelse.'''))
-        sig_root = signature_id.firmar(message, uri, type)
-        msg = etree.tostring(sig_root)
-        return msg if self.xml_validator(msg, type) else ''
+        return signature_id.firmar(message, uri, type)
 
     def get_resolution_data(self, comp_id):
         resolution_data = {
@@ -422,8 +384,6 @@ version="1.0">
         signature_id = self.env.user.get_digital_signature(company_id)
         if not signature_id:
             raise UserError(_('''There are not a Signature Cert Available for this user, pleaseupload your signature or tell to someelse.'''))
-        certp = signature_id.cert.replace(
-            BC, '').replace(EC, '').replace('\n', '')
         resumenes = []
         resumenPeriodo = {}
         for rec in self.with_context(lang='es_CL').move_ids:
@@ -458,10 +418,8 @@ version="1.0">
                 .replace('<item>','\n').replace('</item>','').replace('<itemTraslado>','').replace('</itemTraslado>','\n')
         envio_dte = self.sign_full_xml(
             envio_dte,
-            signature_id.priv_key,
-            certp,
             doc_id,
-            'libro')
+            'libro_guia')
         return envio_dte, doc_id
 
     @api.multi
