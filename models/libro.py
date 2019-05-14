@@ -174,7 +174,7 @@ version="1.0">
     def get_xml_file(self):
         return {
             'type' : 'ir.actions.act_url',
-            'url': '/download/xml/libro_guia%s' % (self.id),
+            'url': '/download/xml/libro_guia/%s' % (self.id),
             'target': 'self',
         }
 
@@ -304,7 +304,7 @@ version="1.0">
             det['Anulado'] = 1
         #det['Operacion'] =[1,2]
         det['TpoOper'] = rec.move_reason
-        det['FchDoc'] = rec.date[:10]
+        det['FchDoc'] = rec.date.strftime(DF)
         det['RUTDoc'] = self.format_vat(rec.partner_id.vat or self.company_id.partner_id.vat)
         name =  rec.partner_id.name or self.company_id.name
         det['RznSoc'] = name[:50]
@@ -320,7 +320,7 @@ version="1.0">
         if referencia:
             det['TpoDocRef'] = referencia.journal_document_class_id.sii_code
             det['FolioDocRef'] = referencia.origin
-            det['FchDocRef'] = referencia.date[:10]
+            det['FchDocRef'] = referencia.date.strftime(DF)
         if rec.reference:
             for r in rec.reference:##reparar para que no sobreescriba
                 det['TpoDocRef'] = r.sii_referencia_TpoDocRef.sii_code

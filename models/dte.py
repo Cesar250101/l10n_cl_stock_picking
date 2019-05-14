@@ -112,18 +112,6 @@ version="1.0">
 {}</EnvioDTE>'''.format(doc)
         return xml
 
-    def create_template_seed(self, seed):
-        return self.env['account.invoice'].create_template_seed(seed)
-
-    def get_seed(self, company_id):
-        return self.env['account.invoice'].get_seed(company_id)
-
-    def sign_seed(self, message, privkey, cert):
-        return self.env['account.invoice'].sign_seed(message, privkey, cert)
-
-    def get_token(self, seed_file, company_id):
-        return self.env['account.invoice'].get_token(seed_file, company_id)
-
     def get_resolution_data(self, comp_id):
         resolution_data = {
             'dte_resolution_date': comp_id.dte_resolution_date,
