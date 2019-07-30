@@ -78,7 +78,8 @@ class stock_picking(models.Model):
     _inherit = "stock.picking"
 
     def create_template_envio(self, RutEmisor, RutReceptor, FchResol, NroResol,
-                              TmstFirmaEnv, EnvioDTE, subject_serial_number,SubTotDTE):
+                              TmstFirmaEnv, EnvioDTE, subject_serial_number,
+                              SubTotDTE):
         xml = '''<SetDTE ID="SetDoc">
 <Caratula version="1.0">
 <RutEmisor>{0}</RutEmisor>
@@ -242,6 +243,7 @@ version="1.0">
                 s.sii_result = 'NoEnviado'
                 s._timbrar()
                 self.env['sii.cola_envio'].create({
+                                            'company_id': s.company_id.id,
                                             'doc_ids': [s.id],
                                             'model': 'stock.picking',
                                             'user_id': self.env.uid,
