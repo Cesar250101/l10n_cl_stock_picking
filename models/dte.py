@@ -655,18 +655,22 @@ version="1.0">
             _server = Client(url)
             receptor = r.format_vat(partner_id.commercial_partner_id.vat)
             scheduled_date = fields.Datetime.context_timestamp(r.with_context(tz='America/Santiago'), fields.Datetime.from_string(r.scheduled_date)).strftime("%d-%m-%Y")
-            total = str(int(round(r.amount_total,0)))
+            total = str(int(round(r.amount_total, 0)))
             sii_code = str(r.document_class_id.sii_code)
-            respuesta = _server.service.getEstDte(signature_id.subject_serial_number[:8],
-                                      str(signature_id.subject_serial_number[-1]),
-                                      r.company_id.vat[2:-1],
-                                      r.company_id.vat[-1],
-                                      receptor[:8],
-                                      receptor[-1],
-                                      sii_code,
-                                      str(r.sii_document_number),
-                                      scheduled_date,
-                                      total,token)
+            rut = signature_id.subject_serial_number
+            respuesta = _server.service.getEstDte(
+                            rut[:8].replace('-', ''),
+                            str(rut[-1]),
+                            r.company_id.vat[2:-1],
+                            r.company_id.vat[-1],
+                            receptor[:8].replace('-', ''),
+                            receptor[-1],
+                            sii_code,
+                            str(r.sii_document_number),
+                            scheduled_date,
+                            total,
+                            token
+                        )
             r.sii_message = respuesta
 
     @api.multi
