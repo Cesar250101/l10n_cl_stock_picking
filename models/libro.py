@@ -181,7 +181,7 @@ version="1.0">
     def format_vat(self, value):
         return value[2:10] + '-' + value[10:]
 
-    @api.onchange('periodo_tributario','tipo_operacion')
+    @api.onchange('periodo_tributario')
     def _setName(self):
         if self.name:
             return
