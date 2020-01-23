@@ -26,11 +26,14 @@ try:
     import pdf417gen
 except ImportError:
     _logger.info('Cannot import pdf417gen library')
-
 try:
     import base64
 except ImportError:
     _logger.info('Cannot import base64 library')
+try:
+    from PIL import Image, ImageDraw, ImageFont
+except:
+    _logger.warning("no se ha cargado PIL")
 
 
 server_url = {'SIICERT':'https://maullin.sii.cl/DTEWS/','SII':'https://palena.sii.cl/DTEWS/'}
@@ -76,18 +79,33 @@ class stock_picking(models.Model):
         rut = rut.replace('CL','')
         return rut
 
-    def pdf417bc(self, ted):
+    def pdf417bc(self, ted, columns=13, ratio=3):
         bc = pdf417gen.encode(
             ted,
             security_level=5,
-            columns=13,
+            columns=columns,
+            encoding='ISO-8859-1',
         )
         image = pdf417gen.render_image(
             bc,
             padding=15,
             scale=1,
+            ratio=ratio,
         )
         return image
+
+    @api.multi
+    def get_barcode_img(self, columns=13, ratio=3):
+        barcodefile = BytesIO()
+        image = self.pdf417bc(self.sii_barcode, columns, ratio)
+        image.save(barcodefile, 'PNG')
+        data = barcodefile.getvalue()
+        return base64.b64encode(data)
+
+    def _get_barcode_img(self):
+        for r in self:
+            if r.sii_barcode:
+                r.sii_barcode_img = r.get_barcode_img()
 
     sii_batch_number = fields.Integer(
         copy=False,
@@ -100,7 +118,7 @@ class stock_picking(models.Model):
         readonly=True,
         help='SII Barcode Name')
     sii_barcode_img = fields.Binary(
-        copy=False,
+        compute="_get_barcode_img",
         string=_('SII Barcode Image'),
         help='SII Barcode Image in PDF417 format')
     sii_message = fields.Text(
@@ -563,3 +581,50 @@ class stock_picking(models.Model):
                 r.sii_xml_request.get_send_status(r.env.user)
         self._get_dte_status()
         self.get_sii_result()
+
+    @api.multi
+    def _get_printed_report_name(self):
+        self.ensure_one()
+        if self.document_class_id:
+            string_state = ""
+            if self.state == 'draft':
+                string_state = "en borrador "
+            report_string = "%s %s %s" % (self.document_class_id.name,
+                                          string_state,
+                                          self.sii_document_number or '')
+        else:
+            report_string = super(AccountInvoice, self)._get_printed_report_name()
+        return report_string
+
+    @api.multi
+    def getTotalDiscount(self):
+        total_discount = 0
+        for l in self.move_lines:
+            qty = l.quantity_done
+            if qty <= 0:
+                qty = l.product_uom_qty
+            total_discount +=  (((l.discount or 0.00) /100) * l.precio_unitario * qty)
+        return self.currency_id.round(total_discount)
+
+    @api.multi
+    def sii_header(self):
+        W, H = (560, 255)
+        img = Image.new('RGB', (W, H), color=(255,255,255))
+
+        d = ImageDraw.Draw(img)
+        w, h = (0, 0)
+        for i in range(10):
+            d.rectangle(((w, h), (550+w, 220+h)), outline="black")
+            w += 1
+            h += 1
+        font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 40)
+        d.text((50,30), "R.U.T.: %s" % self.company_id.document_number, fill=(0,0,0), font=font)
+        d.text((50,90), self.document_class_id.name, fill=(0,0,0), font=font)
+        d.text((220,150), "N° %s" % self.sii_document_number, fill=(0,0,0), font=font)
+        font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 20)
+        d.text((200,235), "SII %s" %self.company_id.sii_regional_office_id.name, fill=(0,0,0), font=font)
+
+        buffered = BytesIO()
+        img.save(buffered, format="PNG")
+        imm = base64.b64encode(buffered.getvalue()).decode()
+        return imm
