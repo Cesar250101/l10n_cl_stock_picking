@@ -308,31 +308,25 @@
       <t t-if="not doc or not 'company_id' in doc">
           <t t-set="company" t-value="res_company"/>
       </t>
-      <t t-if="'journal_document_class_id' in doc and doc.journal_document_class_id">
-        <t t-set="document_class_id" t-value="doc.journal_document_class_id.sii_document_class_id"/>
+      <t t-if="'document_class_id' in doc and doc.document_class_id">
+        <t t-set="document_class_id" t-value="doc.document_class_id"/>
       </t>
       <t t-set="partner_id" t-value="doc.partner_id" />
       <t t-set="commercial_partner_id" t-value="doc.partner_id.commercial_partner_id" />
       <t t-set="logo" t-value="company.logo" />
       <t t-set="sii_document_number" t-value="doc.sii_document_number" />
-      <t t-if="doc.type in ['in_invoice', 'in_refund']">
-        <t t-set="partner_id" t-value="company.partner_id" />
-        <t t-set="commercial_partner_id" t-value="company.partner_id" />
-        <t t-set="company" t-value="doc.partner_id" />
-        <t t-set="logo" t-value="doc.partner_id.image" />
-        <t t-set="sii_document_number" t-value="doc.reference" />
-      </t>
+
     <receipt align='center' width='45' value-thousands-separator='.' >
         <div class="pos-center-align">
           <img t-att-src="'data:image/png;base64,%s' % doc.sii_header()"/>
         </div>
         <t t-if='doc.company_id'>
             <img t-att-src='logo' />
+            <h4 t-esc="'SII %s' % doc.company_id.sii_regional_office_id.name"/>
         </t>
         <div>
           <h3><t t-esc="company.name"/></h3>
         </div>
-        <line><left font='b'>Vendedor: </left><right><t t-esc="doc.user_id.name"/></right></line>
         <line><left font='b'>Fecha: </left><right><t t-esc="doc.scheduled_date"/></right></line>
         <line><left font='b'>Teléfono: </left><right><t t-esc="doc.company_id.phone"/></right></line>
         <line><left font='b'>Dirección: </left><right><t t-esc="doc.company_id.street"/></right></line>
@@ -344,10 +338,10 @@
           <line><left font='b'>Dirección: </left><right><span t-esc="doc.partner_id.street"/></right></line>
           <line><left font='b'>Teléfono: </left><right><span t-esc="doc.partner_id.phone"/></right></line>
         </t>
-        <t t-if="doc.referencias">
+        <t t-if="doc.reference">
           <line><right>--------</right></line>
           <line><right>Documento de Referencia</right></line>
-          <t t-foreach="doc.referencias" t-as="l">
+          <t t-foreach="doc.reference" t-as="l">
             <line><left>Folio:</left><right><t t-if="l.origen" t-esc="l.origen" /></right></line>
             <line><left>Referencia:</left><right><t t-if="l.sii_referencia_TpoDocRef" t-esc="l.sii_referencia_TpoDocRef.name" /></right></line>
             <line><left>Motivo/observación:</left><right><t t-esc="l.sii_referencia_CodRef[0]" /> <t t-esc="l.sii_referencia_CodRef" />: <span t-if="l.motivo" t-field="l.motivo"/></right></line>
@@ -417,7 +411,7 @@
               <p style="text-align:center;color:red; font-size:8px;">
                 Timbre Electrónico SII
                 <br/>
-                Resolución <t t-esc='doc.company_id.dte_resolution_number'/> de <t t-esc='doc.company_id.dte_resolution_date[:4]'/> Verifique documento en: <t t-if="not doc._es_boleta()">www.sii.cl</t><t t-if="doc._es_boleta()" t-esc="'%s/boleta/%s' % (doc.company_id.website, doc.sii_document_number)"/>
+                Resolución <t t-esc='doc.company_id.dte_resolution_number'/> de <t t-esc='doc.company_id.dte_resolution_date[:4]'/> Verifique documento en: www.sii.cl
               </p>
             </em>
         </div>

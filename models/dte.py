@@ -170,6 +170,8 @@ class stock_picking(models.Model):
         string="Document Type",
         related="location_id.sii_document_class_id",
     )
+    dte_ticket = fields.Boolean(
+        string="¿Formato Ticket?")
 
     @api.multi
     def action_done(self):
@@ -232,8 +234,8 @@ class stock_picking(models.Model):
         if self.transport_type and self.transport_type not in ['0']:
             IdDoc['TipoDespacho'] = self.transport_type
         IdDoc['IndTraslado'] = self.move_reason
-        #if self.print_ticket:
-        #    IdDoc['TpoImpresion'] = "N" #@TODO crear opcion de ticket
+        if self.dte_ticket:
+            IdDoc['TpoImpresion'] = "T"
         if taxInclude and MntExe == 0 :
             IdDoc['MntBruto'] = 1
         #IdDoc['FmaPago'] = self.forma_pago or 1
@@ -301,7 +303,7 @@ class stock_picking(models.Model):
                 Transporte['Chofer']['NombreChofer'] = self.chofer.name[:30]
         partner_id = self.partner_id or self.company_id.partner_id
         Transporte['DirDest'] = (partner_id.street or '')+ ' '+ (partner_id.street2 or '')
-        Transporte['CmnaDest'] = partner_id.state_id.name or ''
+        Transporte['CmnaDest'] = partner_id.city_id.name or ''
         Transporte['CiudadDest'] = partner_id.city or ''
         #@TODO SUb Area Aduana
         return Transporte
@@ -415,13 +417,11 @@ class stock_picking(models.Model):
             picking_lines['MntExe'],
             picking_lines['no_product'],
             picking_lines['tax_include'])
-        count = 0
         lin_ref = 1
         ref_lines = []
         if self.company_id.dte_service_provider == 'SIICERT' and isinstance(n_atencion, string_types):
             ref_line = {}
             ref_line['NroLinRef'] = lin_ref
-            count = count +1
             ref_line['TpoDocRef'] = "SET"
             ref_line['FolioRef'] = self.get_folio()
             ref_line['FchRef'] = datetime.strftime(datetime.now(), '%Y-%m-%d')
@@ -440,6 +440,7 @@ class stock_picking(models.Model):
                 if ref.date:
                     ref_line['FchRef'] = ref.date
             ref_lines.append(ref_line)
+            lin_ref += 1
         dte['Detalle'] = picking_lines['Detalle']
         dte['Referencia'] = ref_lines
         return dte
@@ -456,7 +457,6 @@ class stock_picking(models.Model):
 
     def _timbrar(self, n_atencion=None):
         folio = self.get_folio()
-        dte = {}
         datos = self._get_datos_empresa(self.company_id)
         datos['Documento'] = [{
             'TipoDTE': self.document_class_id.sii_code,
@@ -621,8 +621,9 @@ class stock_picking(models.Model):
             h += 1
         font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 40)
         d.text((50,30), "R.U.T.: %s" % self.company_id.document_number, fill=(0,0,0), font=font)
-        d.text((50,90), self.document_class_id.name, fill=(0,0,0), font=font)
-        d.text((220,150), "N° %s" % self.sii_document_number, fill=(0,0,0), font=font)
+        d.text((50,90), "Guía de Despacho", fill=(0,0,0), font=font)
+        d.text((100,150), "Electrónica", fill=(0,0,0), font=font)
+        d.text((220,210), "N° %s" % self.sii_document_number, fill=(0,0,0), font=font)
         font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 20)
         d.text((200,235), "SII %s" %self.company_id.sii_regional_office_id.name, fill=(0,0,0), font=font)
 
