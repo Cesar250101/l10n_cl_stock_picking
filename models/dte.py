@@ -300,7 +300,7 @@ class stock_picking(models.Model):
                 Transporte['Chofer']['NombreChofer'] = self.chofer.name[:30]
         partner_id = self.partner_id or self.company_id.partner_id
         Transporte['DirDest'] = (partner_id.street or '')+ ' '+ (partner_id.street2 or '')
-        Transporte['CmnaDest'] = partner_id.state_id.name or ''
+        Transporte['CmnaDest'] = partner_id.city_id.name or ''
         Transporte['CiudadDest'] = partner_id.city or ''
         #@TODO SUb Area Aduana
         return Transporte
