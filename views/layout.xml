@@ -223,21 +223,19 @@
                                          <span t-field="o.global_discount" t-field-options='{"widget": "monetary", "display_currency": "o.currency_id"}'/>
                                      </td>
                                  </tr>
-                                   <tr t-if="'subtotal' in o">
+                                   <tr t-if="'amount_untaxed' in o">
                                        <td><strong>Subtotal</strong></td>
                                        <td class="text-right">
-                                           <span t-field="o.amount_untaxed" t-field-options='{"widget": "monetary", "display_currency": "o.currency_id"}'/>
+                                           <span t-field="o.amount_untaxed" t-field-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                        </td>
                                    </tr>
-                                 <t t-if="'tax_line_ids' in o">
-                                  <tr  t-foreach="o.tax_line_ids" t-as="t">
-                                      <td><span t-field="t.name"/></td>
-                                      <td class="text-right">
-                                        <span t-field="t.amount"
-                                           t-field-options='{"widget": "monetary", "display_currency": "o.currency_id"}'/>
-                                      </td>
-                                  </tr>
-                                </t>
+                                   <tr  t-foreach="o.get_taxes_values()" t-as="t">
+                                       <td><span t-esc="t_value['description']"/></td>
+                                       <td class="text-right">
+                                         <span t-esc="t_value['amount']"
+                                            t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                       </td>
+                                   </tr>
                                    <tr class="border-black" t-if="'amount_total' in o">
                                        <td><strong>Total</strong></td>
                                        <td class="text-right">
@@ -392,7 +390,7 @@
         <line t-if="doc.amount_tax" class='total'>
           <left><pre>        Impuestos</pre></left>
           <t t-foreach="doc.get_taxes_values()" t-as="tl">
-            <right><t t-esc="tl[0].description" />: $ <value value-decimals='0'><t t-esc='tl[1]' /></value></right>
+            <right><t t-esc="tl_value['description']" />: $ <value value-decimals='0'><t t-esc="tl_value['amount']" /></value></right>
           </t>
         </line>
         <line t-if='doc.amount_total' class='total'>
