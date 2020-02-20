@@ -389,8 +389,9 @@ class stock_picking(models.Model):
             if line.discount > 0:
                 lines['DescuentoPct'] = line.discount
                 lines['DescuentoMonto'] = int(round((((line.discount / 100) * lines['PrcItem'])* qty)))
-            if not no_product :
-                lines['MontoItem'] = int(round(line.subtotal,0))
+            if not no_product:
+                subtotal = line.subtotal if taxInclude else line.price_untaxed
+                lines['MontoItem'] = int(round(subtotal, 0))
             if no_product:
                 lines['MontoItem'] = 0
             line_number += 1
