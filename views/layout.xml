@@ -225,18 +225,18 @@
                                        <span t-field="o.global_discount" t-field-options='{"widget": "monetary", "display_currency": "o.currency_id"}'/>
                                    </td>
                                </tr>
-                                 <tr t-if="'subtotal' in o">
+                                 <tr t-if="'amount_untaxed' in o">
                                      <td><strong>Subtotal</strong></td>
                                      <td class="text-right">
                                          <span t-field="o.amount_untaxed" t-field-options='{"widget": "monetary", "display_currency": "o.currency_id"}'/>
                                      </td>
                                  </tr>
-                               <t t-if="'tax_line_ids' in o">
-                                <tr  t-foreach="o.tax_line_ids" t-as="t">
-                                    <td><span t-field="t.name"/></td>
+                               <t t-if="o.get_taxes_values()">
+                                <tr  t-foreach="o.get_taxes_values()" t-as="t">
+                                    <td><span t-esc="t_value['description']"/></td>
                                     <td class="text-right">
-                                      <span t-field="t.amount"
-                                         t-field-options='{"widget": "monetary", "display_currency": "o.currency_id"}'/>
+                                      <span t-esc="t_value['amount']"
+                                         t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                     </td>
                                 </tr>
                               </t>
@@ -299,8 +299,8 @@
     </t>
   </template>
 
-  <!--<template id="thermal_layouts.stock_picking_thermal">-->
-  <template id="stock_picking_thermal">
+  <!--<template id="thermal_layouts.picking_thermal">-->
+  <template id="picking_thermal">
     <t t-foreach="docs" t-as="doc">
       <t t-if="doc and 'company_id' in doc">
           <t t-set="company" t-value="doc.company_id.sudo()"/>
@@ -394,12 +394,25 @@
             <left><pre>        SubTotal</pre></left>
             <right>$ <value value-decimals='0'><t t-esc='doc.amount_untaxed' /></value></right>
         </line>
-        <line t-if="doc.amount_tax" class='total'>
-          <left><pre>        Impuestos</pre></left>
-          <t t-foreach="doc.get_taxes_values()" t-as="tl">
-            <right><t t-esc="tl[0].description" />: $ <value value-decimals='0'><t t-esc='tl[1]' /></value></right>
-          </t>
-        </line>
+        <t t-set="impuestos" t-value="doc.get_taxes_values()" />
+        <t t-if="len(impuestos) > 1">
+        	<line class='total'>
+          		<left><pre>        Impuestos</pre></left>
+          	</line>
+	        <t t-foreach="impuestos" t-as="tl">
+	          	<line t-if="doc.amount_tax" class='total'>
+	            	<left /><right><t t-esc="tl_value['description']" />: $ <value value-decimals='0'><t t-esc="tl_value['amount']" /></value></right>
+	            </line>
+	        </t>
+	    </t>
+	     <t t-else="len(impuestos) == 1">
+        	<line class='total'>
+          		<left><pre>        Impuestos</pre></left>
+		      	<t t-foreach="impuestos" t-as="tl">
+		            <right><t t-esc="tl_value['description']" />: $ <value value-decimals='0'><t t-esc="tl_value['amount']" /></value></right>
+	          	</t>
+	        </line>
+	    </t>
         <line t-if='doc.amount_total' class='total'>
           <left><pre>        TOTAL</pre></left>
           <right>$ <value value-decimals='0'><t t-esc='doc.amount_total' /></value></right>

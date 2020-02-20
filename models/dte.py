@@ -301,7 +301,7 @@ class stock_picking(models.Model):
                 Transporte['Chofer'] = {}
                 Transporte['Chofer']['RUTChofer'] = self.format_vat(self.chofer.vat)
                 Transporte['Chofer']['NombreChofer'] = self.chofer.name[:30]
-        partner_id = self.partner_id or self.company_id.partner_id
+        partner_id = self.partner_id or self.partner_id.commercial_partner_id or self.company_id.partner_id
         Transporte['DirDest'] = (partner_id.street or '')+ ' '+ (partner_id.street2 or '')
         Transporte['CmnaDest'] = partner_id.city_id.name or ''
         Transporte['CiudadDest'] = partner_id.city or ''
