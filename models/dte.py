@@ -307,15 +307,18 @@ class stock_picking(models.Model):
 
     def _totales(self, MntExe=0, no_product=False, taxInclude=False):
         Totales = {}
-        IVA = 19
+        IVA = False
         for line in self.move_lines:
             if line.move_line_tax_ids:
                 for t in line.move_line_tax_ids:
-                    IVA = t.amount
-        if IVA > 0 and not no_product:
+                    if t.sii_code in [14, 15, 17]:
+                        IVA = t
+        if IVA and not no_product:
             Totales['MntNeto'] = int(round(self.amount_untaxed, 0))
-            Totales['TasaIVA'] = round(IVA,2)
-            Totales['IVA'] = int(round(self.amount_tax, 0))
+            Totales['TasaIVA'] = round(IVA.amount,2)
+            for k, t in self.get_taxes_values().items():
+                if k == str(IVA.id):
+                    Totales['IVA'] = int(round(t['amount'], 0))
         monto_total = int(round(self.amount_total, 0))
         if no_product:
             monto_total = 0
@@ -386,7 +389,9 @@ class stock_picking(models.Model):
                 lines['DescuentoPct'] = line.discount
                 lines['DescuentoMonto'] = int(round((((line.discount / 100) * lines['PrcItem'])* qty)))
             if not no_product :
-                lines['MontoItem'] = int(round(line.subtotal,0))
+                subtotal = line.subtotal if taxInclude else line.price_untaxed
+                lines['MontoItem'] = int(round(subtotal,0))
+
             if no_product:
                 lines['MontoItem'] = 0
             line_number += 1
