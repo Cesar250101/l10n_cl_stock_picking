@@ -342,6 +342,12 @@
           </t>
         </t>
         <line><right>--------</right></line>
+        <line><left>Tipo Operación:</left><right><span t-field="doc.move_reason" /></right></line>
+        <line><left>Tipo Despacho:</left><right><span t-field="doc.transport_type" /></right></line>
+        <line><left>Chofer Nombre:</left><right><t t-if="doc.chofer" t-esc="doc.chofer.name" /></right></line>
+        <line><left>Chofer RUT:</left><right><t t-if="doc.chofer" t-esc="doc.chofer.document_number" /></right></line>
+        <line><left>Patente:</left><right><t t-if="doc.patente" t-esc="doc.patente" /></right></line>
+        <line><right>--------</right></line>
         <div class='orderlines' line-ratio='0.6'>
           <t t-foreach='doc.move_lines' t-as='line'>
             <t t-set='simple' t-value="line.discount == 0 and line.product_uom.name == 'Unit(s)' and line.quantity_done == 1" />
@@ -387,12 +393,25 @@
             <left><pre>        SubTotal</pre></left>
             <right>$ <value value-decimals='0'><t t-esc='doc.amount_untaxed' /></value></right>
         </line>
-        <line t-if="doc.amount_tax" class='total'>
-          <left><pre>        Impuestos</pre></left>
-          <t t-foreach="doc.get_taxes_values()" t-as="tl">
-            <right><t t-esc="tl_value['description']" />: $ <value value-decimals='0'><t t-esc="tl_value['amount']" /></value></right>
-          </t>
-        </line>
+        <t t-set="impuestos" t-value="doc.get_taxes_values()" />
+        <t t-if="len(impuestos) > 1">
+        	<line class='total'>
+          		<left><pre>        Impuestos</pre></left>
+          	</line>
+	        <t t-foreach="impuestos" t-as="tl">
+	          	<line t-if="doc.amount_tax" class='total'>
+	            	<left /><right><t t-esc="tl_value['description']" />: $ <value value-decimals='0'><t t-esc="tl_value['amount']" /></value></right>
+	            </line>
+	        </t>
+	    </t>
+	     <t t-else="len(impuestos) == 1">
+        	<line class='total'>
+          		<left><pre>        Impuestos</pre></left>
+		      	<t t-foreach="impuestos" t-as="tl">
+		            <right><t t-esc="tl_value['description']" />: $ <value value-decimals='0'><t t-esc="tl_value['amount']" /></value></right>
+	          	</t>
+	        </line>
+	    </t>
         <line t-if='doc.amount_total' class='total'>
           <left><pre>        TOTAL</pre></left>
           <right>$ <value value-decimals='0'><t t-esc='doc.amount_total' /></value></right>

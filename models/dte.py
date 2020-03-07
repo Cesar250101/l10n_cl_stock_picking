@@ -617,14 +617,14 @@ class stock_picking(models.Model):
         d = ImageDraw.Draw(img)
         w, h = (0, 0)
         for i in range(10):
-            d.rectangle(((w, h), (550+w, 220+h)), outline="black")
+            d.rectangle(((w, h), (550+w, 240+h)), outline="black")
             w += 1
             h += 1
         font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 40)
         d.text((50,30), "R.U.T.: %s" % self.company_id.document_number, fill=(0,0,0), font=font)
-        d.text((50,90), "Guía de Despacho", fill=(0,0,0), font=font)
-        d.text((100,150), "Electrónica", fill=(0,0,0), font=font)
-        d.text((220,210), "N° %s" % self.sii_document_number, fill=(0,0,0), font=font)
+        d.text((70,85), "Guía de Despacho", fill=(0,0,0), font=font)
+        d.text((150,145), "Electrónica", fill=(0,0,0), font=font)
+        d.text((220,195), "N° %s" % self.sii_document_number, fill=(0,0,0), font=font)
         font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 20)
 
         buffered = BytesIO()
