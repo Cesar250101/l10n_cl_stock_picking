@@ -186,7 +186,7 @@ class stock_picking(models.Model):
                 s.responsable_envio = self.env.uid
                 s.sii_result = 'NoEnviado'
                 s._timbrar()
-                self.env['sii.cola_envio'].create({
+                self.env['sii.cola_envio'].sudo().create({
                                             'company_id': s.company_id.id,
                                             'doc_ids': [s.id],
                                             'model': 'stock.picking',
@@ -209,7 +209,7 @@ class stock_picking(models.Model):
                 rec.sii_result = "EnCola"
                 ids.append(rec.id)
         if ids:
-            self.env['sii.cola_envio'].create({
+            self.env['sii.cola_envio'].sudo().create({
                                     'company_id': self[0].company_id.id,
                                     'doc_ids': ids,
                                     'model': 'stock.picking',
