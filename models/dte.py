@@ -255,12 +255,14 @@ class stock_picking(models.Model):
         partner_id = self.partner_id or self.company_id.partner_id
         if not partner_id.commercial_partner_id.vat :
             raise UserError("Debe Ingresar RUT Receptor")
-        partner_id = self.commercial_partner_id or self.partner_id.commercial_partner_id
         Receptor['RUTRecep'] = partner_id.rut()
         Receptor['RznSocRecep'] = partner_id.commercial_partner_id.name
         activity_description = self.activity_description or partner_id.activity_description
         if not activity_description:
-            raise UserError(_('Seleccione giro del partner'))
+            if self.partner_id.commercial_partner_id.acteco_ids:
+                activity_description = self.partner_id.commercial_partner_id.acteco_ids[0]
+            else:
+                raise UserError(_('Seleccione giro del partner'))
         Receptor['GiroRecep'] = activity_description.name
         if partner_id.commercial_partner_id.phone:
             Receptor['Contacto'] = partner_id.commercial_partner_id.phone
@@ -379,7 +381,7 @@ class stock_picking(models.Model):
                 lines['DescuentoPct'] = line.discount
                 lines['DescuentoMonto'] = int(round((((line.discount / 100) * lines['PrcItem'])* qty)))
             if not no_product:
-                subtotal = line.price_untaxed
+                subtotal = line.subtotal if taxInclude else line.price_untaxed
                 lines['MontoItem'] = int(round(subtotal, 0))
             if no_product:
                 lines['MontoItem'] = 0
@@ -544,7 +546,7 @@ class stock_picking(models.Model):
             signature_id = self.env.user.get_digital_signature(r.company_id)
             url = server_url[r.company_id.dte_service_provider] + 'QueryEstDte.jws?WSDL'
             _server = Client(url)
-            partner_id = r.commercial_partner_id or r.partner_id.commercial_partner_id
+            partner_id = r.partner_id.commercial_partner_id
             receptor = partner_id.rut()
             scheduled_date = fields.Datetime.context_timestamp(r.with_context(tz='America/Santiago'), fields.Datetime.from_string(r.scheduled_date)).strftime("%d-%m-%Y")
             total = str(int(round(r.amount_total, 0)))
