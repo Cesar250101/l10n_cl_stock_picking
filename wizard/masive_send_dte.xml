@@ -28,10 +28,5 @@
             </field>
         </record>
 
-        <act_window id="action_stock_picking_masive_send"
-            multi="True"
-            key2="client_action_multi" name="Enviar Guías de despacho al sii"
-            res_model="sii.dte.stock_picking.masive_send.wizard" src_model="stock.picking"
-view_mode="form" target="new" view_type="form" />
     </data>
 </odoo>

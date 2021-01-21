@@ -9,21 +9,21 @@ import logging
 _logger = logging.getLogger(__name__)
 
 class PickingToInvoiceD(models.Model):
-    _inherit = 'account.invoice'
+    _inherit = 'account.move'
 
     @api.depends('partner_id')
     @api.onchange('partner_id')
     def _get_pending_pickings(self ):
         for inv in self:
-            if not inv.partner_id or inv.type in ['out_refund', 'in_refund', 'in_invoice']:
+            if not inv.is_invoice() or not inv.partner_id or inv.move_type in ['out_refund', 'in_refund', 'in_invoice']:
                 continue
-            if inv.type in ['out_invoice']:
+            if inv.move_type in ['out_invoice']:
                 mes_antes = 0
-                if inv.date_invoice:
-                    date_invoice = inv.date_invoice
-                    fecha_inicio = "%s-%s-01 00:00:00" % (date_invoice.year, date_invoice.month)
-                    fecha_final = "%s-%s-11 00:00:00" % (date_invoice.year, date_invoice.month)
-                    if date_invoice.day == 10:
+                if inv.date:
+                    date = inv.date
+                    fecha_inicio = "%s-%s-01 00:00:00" % (date.year, date.month)
+                    fecha_final = "%s-%s-11 00:00:00" % (date.year, date.month)
+                    if date.day == 10:
                         mes_antes -=1
                 else:
                     now = datetime.now()
@@ -62,23 +62,24 @@ class PickingToInvoiceD(models.Model):
             copy=False,
         )
 
-    @api.multi
-    def invoice_validate(self):
-        result  = super(PickingToInvoiceD, self).invoice_validate()
-        for inv in self:
+
+    def _post(self, soft=True):
+        to_post = super(AccountMove, self)._post(soft=soft)
+        for inv in to_post:
             sp = False
-            if inv.move_id:
+            if inv.is_invoice():
                 for ref in inv.referencias:
                     if ref.sii_referencia_TpoDocRef.sii_code in [ 56 ]:
-                        sp = self.env['stock_picking'].search([('sii_document_number', '=', ref.origen)])
+                        sp = self.env['stock_picking'].search([
+                            ('sii_document_number', '=', ref.origen)])
                 if sp:
-                    if inv.type in ['out_invoice']:
+                    if inv.move_type in ['out_invoice']:
                         sp.invoiced = True
                     else:
                         sp.invoiced = False
-        return result
+        return to_post
 
-    @api.multi
+
     def action_view_pickings(self):
         picking_pending_ids = self.mapped('picking_pending_ids')
         action = self.env.ref('stock.action_picking_tree_all').read()[0]#cambiar por wizard seleccionable
