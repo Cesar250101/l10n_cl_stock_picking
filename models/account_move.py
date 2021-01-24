@@ -15,15 +15,14 @@ class PickingToInvoiceD(models.Model):
     @api.onchange('partner_id')
     def _get_pending_pickings(self ):
         for inv in self:
-            if not inv.is_invoice() or not inv.partner_id or inv.move_type in ['out_refund', 'in_refund', 'in_invoice']:
-                continue
-            if inv.move_type in ['out_invoice']:
+            pickings = self.env['stock.picking']
+            if inv.is_invoice() and inv.partner_id and inv.move_type in ['out_invoice']:
                 mes_antes = 0
-                if inv.date:
-                    date = inv.date
-                    fecha_inicio = "%s-%s-01 00:00:00" % (date.year, date.month)
-                    fecha_final = "%s-%s-11 00:00:00" % (date.year, date.month)
-                    if date.day == 10:
+                if inv.invoice_date:
+                    invoice_date = inv.invoice_date
+                    fecha_inicio = "%s-%s-01 00:00:00" % (invoice_date.year, invoice_date.month)
+                    fecha_final = "%s-%s-11 00:00:00" % (invoice_date.year, invoice_date.month)
+                    if invoice_date.day == 10:
                         mes_antes -=1
                 else:
                     now = datetime.now()
@@ -40,14 +39,12 @@ class PickingToInvoiceD(models.Model):
                         ('invoiced', '=', False),
                         ('sii_result', 'in', ['Proceso', 'Reparo']),
                         ('partner_id.commercial_partner_id', '=', inv.commercial_partner_id.id),
-                        ('date','>=', tz_current.strftime(DTF)),
-                        ('date','<', tz_next.strftime(DTF)),
+                        ('date_done','>=', tz_current.strftime(DTF)),
+                        ('date_done','<', tz_next.strftime(DTF)),
                     ]
                 )
-                inv.update({
-                        'has_pending_pickings': len(pickings.ids),
-                        'picking_pending_ids': pickings.ids,
-                        })
+            inv.has_pending_pickings = len(pickings)
+            inv.picking_pending_ids = pickings
 
     has_pending_pickings = fields.Integer(
         string="Pending Pickings",
