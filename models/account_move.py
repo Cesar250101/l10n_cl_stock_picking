@@ -61,7 +61,7 @@ class PickingToInvoiceD(models.Model):
 
 
     def _post(self, soft=True):
-        to_post = super(AccountMove, self)._post(soft=soft)
+        to_post = super(PickingToInvoiceD, self)._post(soft=soft)
         for inv in to_post:
             sp = False
             if inv.is_invoice():
