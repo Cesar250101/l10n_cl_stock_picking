@@ -110,6 +110,7 @@ class stock_picking(models.Model):
                 ('NoEnviado', 'No Enviado'),
                 ('EnCola','En cola de envío'),
                 ('Enviado', 'Enviado'),
+                ('EnProceso', 'EnProceso'),
                 ('Aceptado', 'Aceptado'),
                 ('Rechazado', 'Rechazado'),
                 ('Reparo', 'Reparo'),
