@@ -30,6 +30,6 @@
         "views/account_move.xml",
         'wizard/masive_send_dte.xml',
     ],
-    'version': '0.23.1',
+    'version': '0.23.2',
     'application': True,
 }
