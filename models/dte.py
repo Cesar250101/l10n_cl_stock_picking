@@ -346,6 +346,7 @@ class stock_picking(models.Model):
                                     "CodImp": t.sii_code,
                                     'price_include': taxInclude,
                                     'TasaImp': amount,
+                                    'mepco': t.mepco,
                                 }
                         )
             lines['NmbItem'] = line.product_id.name
