@@ -226,7 +226,7 @@
                       <div class="row">
                          <div class="col-4">
                            <div class="col-12">
-                              <img t-if="o.sii_barcode_img" t-att-src="'data:image/png;base64,%s' % to_text(o.sii_barcode_img)" />
+                              <img t-if="o.sii_barcode_img" t-att-src="'data:image/png;base64,%s' % to_text(o.sii_barcode_img)" style="max-width: 90px;max-height: 90px;"/>
                            </div>
                            <div class="col-12">
                                <p style="text-align:center;color:red; font-size:8px;">
