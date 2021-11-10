@@ -237,7 +237,7 @@
                            </div>
                          </div>
                          <div class="col-4">
-                          <p>
+                          <p style="font-size:12px !important;">
                             <span t-field="o.note"/>                          
                           </p>
                          </div>
