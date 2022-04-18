@@ -545,7 +545,7 @@ class stock_picking(models.Model):
             return
         for r in self:
             id = "T{}F{}".format(r.document_class_id.sii_code,
-                                 r.sii_document_number)
+                                 int(r.sii_document_number))
             r.sii_result = resultado[id]['status']
             if resultado[id].get('xml_resp'):
                 r.sii_message = resultado[id].get('xml_resp')
