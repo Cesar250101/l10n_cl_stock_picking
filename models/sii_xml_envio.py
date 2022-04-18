@@ -13,8 +13,8 @@ class SIIXMLEnvio(models.Model):
         states={'draft': [('readonly', False)]},
     )
 
-    def set_childs(self, state):
-        result = super(SIIXMLEnvio, self).set_childs(state)
+    def set_childs(self, state, detalle_rep_rech=False):
+        result = super(SIIXMLEnvio, self).set_childs(state, detalle_rep_rech=detalle_rep_rech)
         for r in self.picking_ids:
             r.sii_result = state
         return result
