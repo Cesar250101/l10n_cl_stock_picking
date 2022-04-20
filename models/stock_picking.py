@@ -341,7 +341,7 @@ class StockMove(models.Model):
             string='Taxes',
             domain=[('type_tax_use', '!=', 'none'), '|', ('active', '=', False), ('active', '=', True)],
         )
-    discount = fields.Monetary(
+    discount = fields.Float(
             digits=dp.get_precision('Discount'),
             string='Discount (%)',
         )
