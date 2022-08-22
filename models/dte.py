@@ -140,6 +140,7 @@ class stock_picking(models.Model):
         'sii.document_class',
         string="Document Type",
         related="location_id.sii_document_class_id",
+        store=True,
     )
     dte_ticket = fields.Boolean(
         string="¿Formato Ticket?")
