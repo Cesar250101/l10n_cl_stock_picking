@@ -6,7 +6,7 @@ from odoo.tools.float_utils import float_compare, float_round
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT, DEFAULT_SERVER_DATE_FORMAT
 import logging
 _logger = logging.getLogger(__name__)
-from .bigint import BigInt
+from odoo.addons.l10n_cl_fe.models.bigint import BigInt
 
 class StockPicking(models.Model):
     _inherit = "stock.picking"
@@ -142,8 +142,6 @@ class StockPicking(models.Model):
             related="partner_id.commercial_partner_id.activity_description",
             readonly=True, states={'assigned':[('readonly',False)],'draft':[('readonly',False)]},
         )
-    #==>campo requiere forzar update por db de Char -> Integer -> BigInt o no se aplica (update22082022)
-    #==>usar fields.Integer de otro modo
     sii_document_number = BigInt(
             string='Document Number',
             copy=False,

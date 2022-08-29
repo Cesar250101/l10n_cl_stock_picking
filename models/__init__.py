@@ -9,4 +9,3 @@ from . import sale_order
 from . import sii_xml_envio
 from . import stock_location
 from . import stock_picking
-from . import bigint

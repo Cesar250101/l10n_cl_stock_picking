@@ -10,7 +10,7 @@ class DTECAF(models.Model):
 
     def _join_inspeccionar(self):
         if self.sii_document_class in [50, 52]:
-            return ' LEFT JOIN stock_picking sp on s = sp.sii_document_number::integer and sp.document_class_id = %s' % self.sequence_id.sii_document_class_id.id
+            return ' LEFT JOIN stock_picking sp on s = sp.sii_document_number and sp.document_class_id = %s' % self.sequence_id.sii_document_class_id.id
         return super(DTECAF, self)._join_inspeccionar()
 
 
