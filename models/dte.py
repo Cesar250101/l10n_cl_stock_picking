@@ -140,6 +140,7 @@ class stock_picking(models.Model):
         'sii.document_class',
         string="Document Type",
         related="location_id.sii_document_class_id",
+        store=True,
     )
     dte_ticket = fields.Boolean(
         string="¿Formato Ticket?")
@@ -152,7 +153,7 @@ class stock_picking(models.Model):
                 continue
             if not s.sii_document_number and s.location_id.sequence_id.is_dte:
                 s.sii_document_number = s.location_id.sequence_id.next_by_id()
-                document_number = (s.document_class_id.doc_code_prefix or '') + s.sii_document_number
+                document_number = (s.document_class_id.doc_code_prefix or '') + str(s.sii_document_number)
                 s.name = document_number
             if s.picking_type_id.code in ['outgoing', 'internal']:# @TODO diferenciar si es de salida o entrada para internal
                 s.responsable_envio = self.env.uid
