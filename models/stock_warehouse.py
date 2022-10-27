@@ -5,13 +5,14 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
-class StockLocation(models.Model):
-    _inherit = 'stock.location'
+class StockWarehouse(models.Model):
+    _inherit = 'stock.warehouse'
 
-    sii_document_class_id = fields.Many2one(
+    document_class_id = fields.Many2one(
             'sii.document_class',
             string='Document Type',
             required=False,
+            domain=[('document_type', '=', 'stock_picking')]
         )
     sequence_id = fields.Many2one(
             'ir.sequence',
@@ -19,6 +20,7 @@ class StockLocation(models.Model):
             required=False,
             help="""This field contains the information related to the numbering \
             of the documents entries of this document type.""",
+            domain=[('sii_document_class_id.document_type', '=', 'stock_picking')]
         )
     sucursal_id = fields.Many2one(
         'sii.sucursal',
@@ -32,8 +34,15 @@ class StockLocation(models.Model):
             string="Modo Restauración",
             default=False,
         )
-    company_activity_ids = fields.Many2many("partner.activities", related="company_id.company_activities_ids")
+    company_activity_ids = fields.Many2many(
+        "partner.activities",
+        related="company_id.company_activities_ids")
     acteco_ids = fields.Many2many(
             'partner.activities',
             string="Código de Actividades",
         )
+
+    @api.onchange('acteco_ids')
+    def limitar_actecos(self):
+        if len(self.acteco_ids) > 4:
+            raise UserError("Deben ser máximo 4 actecos")

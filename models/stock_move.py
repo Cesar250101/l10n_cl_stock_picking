@@ -24,7 +24,7 @@ class StockMove(models.Model):
                     il = self.env['account.move'].search(
                             [
                                     ('sii_document_number', '=', ref.origen),
-                                    ('sii_document_class_id.sii_code', '=', ref.sii_referencia_TpoDocRef.sii_code),
+                                    ('document_class_id.sii_code', '=', ref.sii_referencia_TpoDocRef.sii_code),
                                     ('product_id', '=', self.product_id.id),
                             ]
                         )

@@ -174,6 +174,13 @@ class StockPicking(models.Model):
             else:
                 r.sii_barcode_img = False
 
+    def _set_default_dc(self):
+        pt_id = self.env.context.get('default_picking_type_id', False)
+        pt = self.env['stock.picking.type'].browse(pt_id)
+        if pt.code == 'incoming':
+            return False
+        return pt.warehouse_id.document_class_id.id
+
     sii_batch_number = fields.Integer(
         copy=False,
         string='Batch Number',
@@ -235,9 +242,11 @@ class StockPicking(models.Model):
     responsable_envio = fields.Many2one('res.users')
     document_class_id = fields.Many2one(
         'sii.document_class',
-        string="Document Type",
-        related="location_id.sii_document_class_id",
-        store=True,
+        string="Tipo de documento",
+        readonly=True,
+        states={'assigned':[('readonly',False)],'draft':[('readonly',False)]},
+        default=_set_default_dc,
+        domain=[('document_type', '=', 'stock_picking')]
     )
     dte_ticket = fields.Boolean(
         string="¿Formato Ticket?")
@@ -279,7 +288,7 @@ class StockPicking(models.Model):
             string='Document Number',
             copy=False,
             readonly=True,
-            states={'draft':[('readonly',False)]},
+            states={'assigned':[('readonly',False)],'draft':[('readonly',False)]},
         )
     responsability_id = fields.Many2one(
             'sii.responsability',
@@ -288,13 +297,15 @@ class StockPicking(models.Model):
             store=True,
         )
     next_number = fields.Integer(
-            related='picking_type_id.sequence_id.number_next_actual',
+            related='picking_type_id.warehouse_id.sequence_id.number_next_actual',
             string='Next Document Number',
             readonly=True,
         )
     use_documents = fields.Boolean(
             string='Use Documents?',
             default=set_use_document,
+            readonly=True,
+            states={'assigned':[('readonly',False)],'draft':[('readonly',False)]},
         )
     reference = fields.One2many(
             'stock.picking.referencias',
@@ -366,6 +377,16 @@ class StockPicking(models.Model):
     def onchange_picking_type(self,):
         if self.picking_type_id:
             self.use_documents = self.picking_type_id.code not in ["incoming"]
+        else:
+            self.use_documents = False
+
+    @api.onchange('picking_type_id', 'use_documents')
+    def set_dc_id(self):
+        if self.use_documents and self.picking_type_id:
+            self.document_class_id = self.picking_type_id.warehouse_id.document_class_id
+            self.sii_document_number = 0
+        else:
+            self.document_class_id = self.env['sii.document_class']
 
     @api.onchange('company_id')
     def _refreshData(self):
@@ -381,10 +402,10 @@ class StockPicking(models.Model):
     def _action_done(self):
         res = super(stock_picking, self)._action_done()
         for s in self:
-            if not s.use_documents or s.location_id.restore_mode:
+            if not s.use_documents or s.picking_type_id.warehouse_id.restore_mode:
                 continue
-            if not s.sii_document_number and s.location_id.sequence_id.is_dte:
-                s.sii_document_number = s.location_id.sequence_id.next_by_id()
+            if not s.sii_document_number and s.picking_type_id.warehouse_id.sequence_id.is_dte:
+                s.sii_document_number = s.picking_type_id.warehouse_id.sequence_id.next_by_id()
                 document_number = (s.document_class_id.doc_code_prefix or '') + str(s.sii_document_number)
                 s.name = document_number
             if s.picking_type_id.code in ['outgoing', 'internal']:# @TODO diferenciar si es de salida o entrada para internal
@@ -429,7 +450,7 @@ class StockPicking(models.Model):
                                     })
     def _giros_emisor(self):
         giros_emisor = []
-        for turn in self.location_id.acteco_ids:
+        for turn in self.picking_type_id.warehouse_id.acteco_ids:
             giros_emisor.append(turn.code)
         return giros_emisor
 
@@ -458,10 +479,10 @@ class StockPicking(models.Model):
         Emisor['CorreoEmisor'] = self.company_id.dte_email_id.name_get()[0][1]
         Emisor['Actecos'] = self._giros_emisor()
         dir_origen = self.company_id
-        if self.location_id.sii_code:
-            Emisor['Sucursal'] = self.location_id.sucursal_id.name
-            Emisor['CdgSIISucur'] = self.location_id.sii_code
-            dir_origen = self.location_id.sucursal_id.partner_id
+        if self.picking_type_id.warehouse_id.sii_code:
+            Emisor['Sucursal'] = self.picking_type_id.warehouse_id.sucursal_id.name
+            Emisor['CdgSIISucur'] = self.picking_type_id.warehouse_id.sii_code
+            dir_origen = self.picking_type_id.warehouse_id.sucursal_id.partner_id
         Emisor['DirOrigen'] = dir_origen.street + ' ' +(dir_origen.street2 or '')
         Emisor['CmnaOrigen'] = dir_origen.city_id.name or ''
         Emisor['CiudadOrigen'] = dir_origen.city or ''
@@ -676,7 +697,7 @@ class StockPicking(models.Model):
         datos = self._get_datos_empresa(self.company_id)
         datos['Documento'] = [{
             'TipoDTE': self.document_class_id.sii_code,
-            'caf_file': [self.location_id.sequence_id.get_caf_file(
+            'caf_file': [self.picking_type_id.warehouse_id.sequence_id.get_caf_file(
                             folio, decoded=False).decode()],
             'documentos': [self._dte(n_atencion)]
             },
