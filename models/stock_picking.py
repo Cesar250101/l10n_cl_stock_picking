@@ -250,11 +250,11 @@ class Referencias(models.Model):
     _name = 'stock.picking.referencias'
 
     origen = fields.Char(
-            string="Origin",
+            string="Folio",
         )
     sii_referencia_TpoDocRef = fields.Many2one(
             'sii.document_class',
-            string="SII Reference Document Type",
+            string="Tipo Documento",
         )
     date = fields.Date(
             string="Fecha de la referencia",

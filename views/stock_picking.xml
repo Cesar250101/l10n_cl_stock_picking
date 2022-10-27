@@ -48,7 +48,8 @@
                     <field name="amount_total" class="oe_subtotal_footer_separator"/>
                   </group>
                 </xpath>
-                <page name="extra" position="inside">
+                <page name="extra" position="before">
+                  <page string="Referencias DTE">
                     <field name="reference" mode="tree" attrs="{'readonly':[('state','in',['cancel','done'])]}">
                       <form>
                         <group>
@@ -57,12 +58,13 @@
                           <field name="date" />
                         </group>
                       </form>
-                      <tree>
+                      <tree editable="bottom">
                         <field name="origen" />
                         <field name="sii_referencia_TpoDocRef"/>
                         <field name="date" />
                       </tree>
                     </field>
+                  </page>
                 </page>
 
                 <field name="name" position="after">
