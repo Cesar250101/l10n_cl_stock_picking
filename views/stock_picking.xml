@@ -17,17 +17,20 @@
             <field name="model">stock.picking</field>
             <field name="inherit_id" ref="stock.view_picking_form"/>
             <field name="arch" type="xml">
-                <form>
-                    <field name="sii_document_number" invisible="1"/>
-                </form>
+                <xpath expr="//div[hasclass('o_td_label')]" position="before">
+                  <field name="use_documents" attrs="{'invisible': [('picking_type_code', '=', 'incoming')]}" />
+                  <field name="document_class_id" options="{'no_create': True}" attrs="{'required': [('use_documents', '=', True)]}" />
+                  <field name="next_number" attrs="{'invisible': [('use_documents', '=', False)]}" />
+                  <field name="sii_document_number" attrs="{'invisible': ['|', ( 'use_documents', '!=', False), ('document_class_id', '=', False)]}" />
+                </xpath>
+
                 <field name="partner_id" position="after">
                     <field name="activity_description" />
-                      <field name="currency_id" groups="base.group_multi_currency" options="{'no_create': True}"/>
+                    <field name="currency_id" groups="base.group_multi_currency" options="{'no_create': True}"/>
                 </field>
 
                 <field name="origin" position="after">
                   <field name="contact_id" />
-                  <field name="use_documents"/>
                 </field>
 
                 <xpath expr="//field[@name='move_ids_without_package']/tree//field[@name='product_uom']" position="after">
