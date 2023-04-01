@@ -6,11 +6,11 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
-class Procurement(models.Model):
+class StockRule(models.Model):
     _inherit = 'stock.rule'
 
     def _get_stock_move_values(self, product_id, product_qty, product_uom, location_id, name, origin, company_id, values):
-        result = super(Procurement, self)._get_stock_move_values(product_id, product_qty, product_uom, location_id, name, origin, company_id, values)
+        result = super(StockRule, self)._get_stock_move_values(product_id, product_qty, product_uom, location_id, name, origin, company_id, values)
         move_line_tax = [(6, 0, values.get('move_line_tax_ids', []))]
         result.update({
                 'precio_unitario': values.get('precio_unitario', 0),

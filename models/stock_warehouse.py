@@ -11,13 +11,11 @@ class StockWarehouse(models.Model):
     document_class_id = fields.Many2one(
             'sii.document_class',
             string='Document Type',
-            required=False,
             domain=[('document_type', '=', 'stock_picking')]
         )
     sequence_id = fields.Many2one(
             'ir.sequence',
             string='Entry Sequence',
-            required=False,
             help="""This field contains the information related to the numbering \
             of the documents entries of this document type.""",
             domain=[('sii_document_class_id.document_type', '=', 'stock_picking')]

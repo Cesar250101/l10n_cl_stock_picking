@@ -18,10 +18,10 @@
             <field name="inherit_id" ref="stock.view_picking_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//div[hasclass('o_td_label')]" position="before">
-                  <field name="use_documents" attrs="{'invisible': [('picking_type_code', '=', 'incoming')]}" />
+                  <field name="use_documents" attrs="{'invisible': [('picking_type_code', '=', 'incoming')]}" string="Emitir Documento Tributario"/>
                   <field name="document_class_id" options="{'no_create': True}" attrs="{'required': [('use_documents', '=', True)]}" />
                   <field name="next_number" attrs="{'invisible': [('use_documents', '=', False)]}" />
-                  <field name="sii_document_number" attrs="{'invisible': ['|', ( 'use_documents', '!=', False), ('document_class_id', '=', False)]}" />
+                  <field name="sii_document_number" attrs="{'invisible': ['|', ( 'use_documents', '!=', False), ('document_class_id', '=', False)]}" string="Folio"/>
                 </xpath>
 
                 <field name="partner_id" position="after">
@@ -37,8 +37,8 @@
                   <field name="name"/>
                   <field name="precio_unitario"/>
                   <field name="price_untaxed" invisible="True" />
-                  <field name="move_line_tax_ids" widget="many2many_tags"  domain="[('type_tax_use','=','sale'),('company_id','=',parent.company_id)]"/>
-                  <field name="discount" />
+                  <field name="move_line_tax_ids" widget="many2many_tags"  domain="[('type_tax_use','=','sale'),('company_id','=',parent.company_id)]" srting="Impuestos"/>
+                  <field name="discount" string="Descuento"/>
                   <field name="subtotal"/>
                   <field name="currency_id" invisible="1"/>
                 </xpath>
@@ -56,7 +56,7 @@
                     <field name="reference" mode="tree" attrs="{'readonly':[('state','in',['cancel','done'])]}">
                       <form>
                         <group>
-                          <field name="origen" />
+                          <field name="origen" string="Folio" />
                           <field name="sii_referencia_TpoDocRef"/>
                           <field name="date" />
                         </group>
@@ -87,7 +87,7 @@
                   <field name="patente" attrs="{'required':[('transport_type','in', ['2']), ('use_documents', '=', True)]}"/>
                 </field>
                 <notebook>
-                    <page string="Electronic Document" name="electronic_document" >
+                    <page string="Facturación Electrónica" name="electronic_document" >
                         <header>
                             <button string="Download XML" type="object"  name="get_xml_file"  attrs="{'invisible':['|',('state', 'not in', ['done']),('sii_result','in',['','NoEnviado'])]}"/>
                             <button string="Send XML" type="object" class="oe_highlight" name="do_dte_send_picking" attrs="{'invisible':['|',('state', 'not in', ['done']),('sii_result', 'not in', ['NoEnviado'])]}"/>

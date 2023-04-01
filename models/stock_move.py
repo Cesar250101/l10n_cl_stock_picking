@@ -18,6 +18,7 @@ class StockMove(models.Model):
         return super(StockMove, self).create(vals)
 
     def _set_price_from(self):
+        return
         if self.picking_id.reference:
             for ref in self.picking_id.reference:
                 if ref.sii_referencia_TpoDocRef.sii_code in [33]:

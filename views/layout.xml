@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
   <template id="dte_layout">
-    <t t-call="web.basic_layout">
-        <t  t-lang="es_CL">
+    <t t-call="web.basic_layout" t-lang="'es_CL'">
+        <t>
           <t t-if="not company">
               <!-- Multicompany -->
               <t t-if="company_id">
@@ -50,7 +50,7 @@
                             <span t-field="company.partner_id.website"/>
                         </p>
                     </div>
-                    <div class="col-xs-5">
+                    <div class="col-5">
                       <div style="border: 3px solid red;text-align: center;font-size:20px;padding-bottom:0px !important; height:145px; width:360px;">
                         <h6 style="color:red;font-size:20px;padding-bottom:10px; padding-top:5px; font-family:Arial;">
                             R.U.T.: <span t-field="company.document_number"/>
@@ -158,7 +158,7 @@
                        </tr>
                    </thead>
                    <tbody class="invoice_tbody" style="font-size: 9px; !important">
-                       <tr t-foreach="o.move_lines.sorted(key=lambda m: m.product_id.id)" t-as="l">
+                       <tr t-foreach="o.move_ids.sorted(key=lambda m: m.product_id.id)" t-as="l">
                            <td style="padding:4px !important;">
                                <span t-field="l.quantity_done"/>
                                <span t-field="l.product_uom"  groups="product.group_uom"/>
@@ -219,7 +219,7 @@
                <div class="row">
                  <div class="col-5">
                    <div class="col-12">
-                      <img t-if="o.sii_barcode_img" t-att-src="'data:image/png;base64,%s' % to_text(o.sii_barcode_img)" />
+                      <img t-if="o.sii_barcode_img" t-att-src="image_data_uri(o.sii_barcode_img)" />
                    </div>
                    <div class="col-12">
                        <p style="text-align:center;color:red; font-size:8px;">
@@ -311,7 +311,7 @@
   <template id="dte_stock_picking" inherit_id="stock.report_delivery_document" >
     <t t-call="web.html_container" position="replace">
       <t t-set="o" t-value="o.with_context(lang=o.partner_id.lang)" />
-      <t t-set="partner" t-value="o.partner_id or (o.move_lines and o.move_lines[0].partner_id) or False"/>
+      <t t-set="partner" t-value="o.partner_id or (o.move_ids and o.move_ids[0].partner_id) or False"/>
       <t t-if='o.use_documents'>
         <t t-call="l10n_cl_stock_picking.dte_layout" />
       </t>
@@ -352,7 +352,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <t t-set="lines" t-value="o.move_lines.filtered(lambda x: x.product_uom_qty)"/>
+                            <t t-set="lines" t-value="o.move_ids.filtered(lambda x: x.product_uom_qty)"/>
                             <tr t-foreach="lines" t-as="move">
                                 <td>
                                     <span t-field="move.product_id"/>
@@ -391,32 +391,32 @@
                                 <t t-set="packages" t-value="o.move_line_ids.mapped('result_package_id')"/>
                                 <t t-foreach="packages" t-as="package">
                                     <t t-call="stock.stock_report_delivery_package_section_line"/>
-                                    <t t-set="package_move_lines" t-value="o.move_line_ids.filtered(lambda l: l.result_package_id == package)"/>
+                                    <t t-set="package_move_ids" t-value="o.move_line_ids.filtered(lambda l: l.result_package_id == package)"/>
                                     <!-- If printing lots/serial numbers => keep products in original lines -->
                                     <t t-if="has_serial_number">
-                                        <tr t-foreach="package_move_lines" t-as="move_line">
+                                        <tr t-foreach="package_move_ids" t-as="move_line">
                                             <t t-call="stock.stock_report_delivery_has_serial_move_line"/>
                                         </tr>
                                     </t>
                                     <!-- If not printing lots/serial numbers => merge lines with same product+description+uom -->
                                     <t t-else="">
-                                        <t t-set="aggregated_lines" t-value="package_move_lines._get_aggregated_product_quantities()"/>
-                                        <t t-call="stock.stock_report_delivery_aggregated_move_lines"/>
+                                        <t t-set="aggregated_lines" t-value="package_move_ids._get_aggregated_product_quantities()"/>
+                                        <t t-call="stock.stock_report_delivery_aggregated_move_ids"/>
                                     </t>
                                 </t>
                                 <!-- Make sure we do another section for package-less products if they exist -->
-                                <t t-set="move_lines" t-value="o.move_line_ids.filtered(lambda l: not l.result_package_id)"/>
-                                <t t-if="move_lines" name="no_package_move_lines">
+                                <t t-set="move_ids" t-value="o.move_line_ids.filtered(lambda l: not l.result_package_id)"/>
+                                <t t-if="move_ids" name="no_package_move_ids">
                                     <t t-call="stock.stock_report_delivery_no_package_section_line" name="no_package_section"/>
                                     <t t-if="has_serial_number">
-                                        <tr t-foreach="move_lines" t-as="move_line">
+                                        <tr t-foreach="move_ids" t-as="move_line">
                                             <t t-call="stock.stock_report_delivery_has_serial_move_line"/>
                                         </tr>
                                     </t>
                                     <t t-else="">
-                                        <t t-set="aggregated_lines" t-value="move_lines._get_aggregated_product_quantities()"/>
+                                        <t t-set="aggregated_lines" t-value="move_ids._get_aggregated_product_quantities()"/>
                                         <t t-if="aggregated_lines">
-                                            <t t-call="stock.stock_report_delivery_aggregated_move_lines"/>
+                                            <t t-call="stock.stock_report_delivery_aggregated_move_ids"/>
                                         </t>
                                     </t>
                                 </t>
@@ -430,9 +430,9 @@
                                     </tr>
                                 </t>
                                 <!-- If not printing lots/serial numbers => merge lines with same product -->
-                                <t t-else="" name="aggregated_move_lines">
+                                <t t-else="" name="aggregated_move_ids">
                                     <t t-set="aggregated_lines" t-value="o.move_line_ids._get_aggregated_product_quantities()"/>
-                                        <t t-call="stock.stock_report_delivery_aggregated_move_lines"/>
+                                        <t t-call="stock.stock_report_delivery_aggregated_move_ids"/>
                                 </t>
                             </t>
                         </tbody>
@@ -451,7 +451,7 @@
                             </thead>
                             <tbody>
                                 <t t-foreach="backorders" t-as="backorder">
-                                    <t t-set="bo_lines" t-value="backorder.move_lines.filtered(lambda x: x.product_uom_qty)"/>
+                                    <t t-set="bo_lines" t-value="backorder.move_ids.filtered(lambda x: x.product_uom_qty)"/>
                                     <tr t-foreach="bo_lines" t-as="bo_line">
                                         <td>
                                             <span t-field="bo_line.product_id"/>
@@ -557,7 +557,7 @@
         <line><left>Patente:</left><right><t t-if="doc.patente" t-esc="doc.patente" /></right></line>
         <line><right>--------</right></line>
         <div class='orderlines' line-ratio='0.6'>
-          <t t-foreach='doc.move_lines' t-as='line'>
+          <t t-foreach='doc.move_ids' t-as='line'>
             <t t-set='simple' t-value="line.discount == 0 and line.product_uom.name == 'Unit(s)' and line.quantity_done == 1" />
             <t t-if='simple'>
                 <line>

@@ -35,8 +35,8 @@ except:
 class StockPicking(models.Model):
     _inherit = "stock.picking"
 
-    @api.onchange('currency_id', 'move_lines', 'move_reason')
-    @api.depends('currency_id', 'move_lines', 'move_reason')
+    @api.onchange('currency_id', 'move_ids', 'move_reason')
+    @api.depends('currency_id', 'move_ids', 'move_reason')
     def _compute_amount(self):
         for rec in self:
             amount_untaxed = 0
@@ -46,7 +46,7 @@ class StockPicking(models.Model):
                 for k, v in taxes.items():
                     amount_tax += v['amount']
                 amount_tax = rec.currency_id.round(amount_tax)
-                for line in rec.move_lines:
+                for line in rec.move_ids:
                     amount_untaxed += line.price_untaxed
             rec.amount_tax = amount_tax
             rec.amount_untaxed = amount_untaxed
@@ -92,7 +92,7 @@ class StockPicking(models.Model):
         tax_grouped = {}
         totales = {}
         included = False
-        for line in self.move_lines:
+        for line in self.move_ids:
             qty = line.quantity_done
             if qty <= 0:
                 qty = line.product_uom_qty
@@ -390,8 +390,8 @@ class StockPicking(models.Model):
 
     @api.onchange('company_id')
     def _refreshData(self):
-        if self.move_lines:
-            for m in self.move_lines:
+        if self.move_ids:
+            for m in self.move_ids:
                 m.company_id = self.company_id.id
 
     @api.onchange('vehicle')
@@ -400,7 +400,7 @@ class StockPicking(models.Model):
         self.patente = self.vehicle.license_plate
 
     def _action_done(self):
-        res = super(stock_picking, self)._action_done()
+        res = super(StockPicking, self)._action_done()
         for s in self:
             if not s.use_documents or s.picking_type_id.warehouse_id.restore_mode:
                 continue
@@ -544,7 +544,7 @@ class StockPicking(models.Model):
     def _totales(self, MntExe=0, no_product=False, taxInclude=False):
         Totales = {}
         IVA = False
-        for line in self.move_lines:
+        for line in self.move_ids:
             if line.move_line_tax_ids:
                 for t in line.move_line_tax_ids:
                     if t.sii_code in [14, 15, 17]:
@@ -573,7 +573,7 @@ class StockPicking(models.Model):
         line_number = 1
         picking_lines = []
         MntExe = 0
-        for line in self.move_lines:
+        for line in self.move_ids:
             no_product = False
             if line.product_id.default_code == 'NO_PRODUCT':
                 no_product = True
@@ -706,7 +706,7 @@ class StockPicking(models.Model):
         if result[0].get('error'):
             raise UserError(result[0].get('error'))
         self.write({
-            'sii_xml_dte': result[0]['sii_xml_request'],
+            'sii_xml_dte': result[0]['sii_xml_dte'],
             'sii_barcode': result[0]['sii_barcode'],
         })
 
@@ -792,7 +792,7 @@ class StockPicking(models.Model):
                 'TipoDTE': k,
                 'documentos': v
             })
-        resultado = fe.consulta_estado_documento(datos)
+        resultado = fe.consulta_estado_dte(datos)
         if not resultado:
             _logger.warning("no resultado en picking")
             return
@@ -833,7 +833,7 @@ class StockPicking(models.Model):
 
     def getTotalDiscount(self):
         total_discount = 0
-        for l in self.move_lines:
+        for l in self.move_ids:
             qty = l.quantity_done
             if qty <= 0:
                 qty = l.product_uom_qty
