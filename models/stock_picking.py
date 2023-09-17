@@ -404,21 +404,32 @@ class StockPicking(models.Model):
         for s in self:
             if not s.use_documents or s.picking_type_id.warehouse_id.restore_mode:
                 continue
-            if not s.sii_document_number and s.picking_type_id.warehouse_id.sequence_id.is_dte:
-                s.sii_document_number = s.picking_type_id.warehouse_id.sequence_id.next_by_id()
-                document_number = (s.document_class_id.doc_code_prefix or '') + str(s.sii_document_number)
-                s.name = document_number
+            s.sii_document_number = s.picking_type_id.warehouse_id.sequence_id.next_by_id()
+            document_number = (s.document_class_id.doc_code_prefix or '') + str(s.sii_document_number)
+            s.name = document_number
             if s.picking_type_id.code in ['outgoing', 'internal']:# @TODO diferenciar si es de salida o entrada para internal
                 s.responsable_envio = self.env.uid
                 s.sii_result = 'NoEnviado'
                 s._timbrar()
+                ISCP = self.env["ir.config_parameter"].sudo()
+                metodo = ISCP.get_param("account.send_dte_method", default='diferido')
+                if metodo == 'manual':
+                    continue
+                tiempo_pasivo = datetime.now()
+                if metodo == 'diferido':
+                    tipo_trabajo = 'pasivo'
+                    tiempo_pasivo += timedelta(
+                        hours=int(ISCP.get_param("account.auto_send_dte", default=1))
+                    )
+                elif metodo == 'inmediato':
+                    tipo_trabajo = 'envio'
                 self.env['sii.cola_envio'].sudo().create({
                                             'company_id': s.company_id.id,
                                             'doc_ids': [s.id],
                                             'model': 'stock.picking',
                                             'user_id': self.env.uid,
-                                            'tipo_trabajo': 'pasivo',
-                                            'date_time': (datetime.now() + timedelta(hours=12)),
+                                            'tipo_trabajo': tipo_trabajo,
+                                            'date_time': tiempo_pasivo,
                                             })
         return res
 
