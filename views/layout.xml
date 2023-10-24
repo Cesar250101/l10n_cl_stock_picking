@@ -69,13 +69,13 @@
                                     SII - <span t-field="o.company_id.sii_regional_office_id.name"/>
                                 </p>
                             </div>
-                            <t t-if="o.origin">
+                            <!-- <t t-if="o.origin">
                                 <div class="row" style="text-align: center !important;">
                                             <div class="col-12" style="text-align: center; color: black; font-size: 12px; margin-top: 5px;">
                                                 Documento de Origen: <t t-esc="o.origin"/>
                                             </div>
                                 </div>
-                            </t>
+                            </t> -->
                           </div>
                         </div>
                         <div class="row" style="display:none !important;">
