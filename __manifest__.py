@@ -29,6 +29,7 @@
         'views/libro_guias.xml',
         "views/account_invoice.xml",
         'wizard/masive_send_dte.xml',
+        'views/formato_papel.xml',
     ],
     'version': '0.24.1',
     'application': True,
