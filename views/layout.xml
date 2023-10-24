@@ -524,7 +524,7 @@
         file="l10n_cl_stock_picking.report_guia_despacho"
         attachment_use="True"
         attachment="(object.state in ('open','paid')) and ('CED_'+(object.number or '').replace('/','')+'.pdf')"
-        
+        paperformat="paperformat_factura_electronica"
     />
                 <!-- paperformat="paperformat_factura_electronica" -->
 
