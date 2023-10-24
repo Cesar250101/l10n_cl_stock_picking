@@ -152,7 +152,7 @@
                           </div>
                         </div>
                       <div class="row" style="border: Black 1px solid;  border-radius: 20px;" name="reference">
-                        <div style="min-height:500px; max-height:500px;">
+                        <div style="min-height:450px; max-height:450px;">
                           <table class="table table-condensed">
                             <thead>
                                 <tr style="font-size:12px!important;color:black!important;padding:2px!important; margin: 1px!important;">
