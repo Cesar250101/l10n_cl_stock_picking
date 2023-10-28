@@ -253,7 +253,7 @@ class StockPicking(models.Model):
 
     amount_untaxed = fields.Monetary(
             compute='_compute_amount',
-            digits=dp.get_precision('Account'),
+            digits='Account',
             string='Untaxed Amount',
         )
     amount_tax = fields.Monetary(
