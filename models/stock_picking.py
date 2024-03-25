@@ -255,14 +255,17 @@ class StockPicking(models.Model):
             compute='_compute_amount',
             digits='Account',
             string='Untaxed Amount',
+            store=True,
         )
     amount_tax = fields.Monetary(
             compute='_compute_amount',
             string='Taxes',
+            store=True,
         )
     amount_total = fields.Monetary(
             compute='_compute_amount',
             string='Total',
+            store=True,
         )
     currency_id = fields.Many2one(
             'res.currency',
@@ -270,7 +273,6 @@ class StockPicking(models.Model):
             required=True,
             states={'draft': [('readonly', False)]},
             default=lambda self: self.env.user.company_id.currency_id.id,
-            track_visibility='always',
         )
     sii_batch_number = fields.Integer(
             copy=False,
