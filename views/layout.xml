@@ -27,27 +27,30 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-7" style="width:505px !important;">
-                        <img t-if="company.logo" t-att-src="'data:image/png;base64,%s' % company.logo" style="max-height: 45px;"/>
-                        <h5 style="text-align:lef;text-transform:uppercase;font-weight:900;font-size:15px;color:black;">
-                            <span t-field="company.partner_id.name"/>
-                        </h5>
-                        <p style="text-align:left;font-size:12px;color:black;">
-                          <t t-if="'activity_description' in company and company.activity_description" >
-                            <span t-field="company.activity_description.name" style="color:black;"/><br />
-                          </t>
+                    <div class="col-7" style="text-align: center">
+                        <img t-if="logo" t-att-src="image_data_uri(logo)" style="max-height: 45px;"/>
+                        <h4 style="text-transform:uppercase;font-weight:900;font-size:18px;color:black;">
+                            <span t-field="company.name"/>
+                        </h4>
+                        <p style="text-align:left; font-size:10px;color:black; text-transform:uppercase; word-wrap: break-word">
+                            <span t-field="company.activity_description.name" style="color:black; text-align:center;"/><br/>
                             <!-- domicilios -->
-                            <span>Casa Matriz: </span><span t-field="company.partner_id.street"/>, <span t-field="company.partner_id.city_id.name"/>, <span t-field="company.partner_id.city"/><br />
-                            <t t-if="company.sucursal_ids">
-                              <t t-foreach="company.sucursal_ids" t-as="sucursal">
-                                <span>Sucursal: </span><span t-field="sucursal.partner_id.street"/>, <span t-field="sucursal.partner_id.city_id.name"/>, <span t-field="sucursal.partner_id.city"/><br />
-                              </t>
+                            <span>Casa Matriz: </span><span t-field="company.street"/>, <span t-field="company.city_id.name"/>, <span t-field="company.city"/>
+                          <t t-if="o.company_id.sucursal_ids and o.use_documents">
+                              <t t-if="len(o.company_id.sucursal_ids) == 1">
+                               <span>Sucursal: </span><span t-field="o.company_id.sucursal_ids[0].partner_id.street"/>, <span t-field="o.company_id.sucursal_ids[0].partner_id.city_id.name"/>, <span t-field="o.company_id.sucursal_ids[0].partner_id.city"/>
                             </t>
-                          <span>Teléfono: <span t-field="company.partner_id.phone"/></span><br/>
-                            <!-- domicilios -->
-                            <span> Teléfono: <span t-field="company.partner_id.phone"/></span><br/>
-                            <span>E-Mail: <span t-field="company.partner_id.email"/></span><br/>
-                            <span t-field="company.partner_id.website"/>
+                            <t t-else="">
+                              <span>Sucursales: </span>
+                                <t t-foreach="o.company_id.sucursal_ids" t-as="sucursal">
+                                  <span t-field="sucursal.partner_id.street"/>, <span t-field="sucursal.partner_id.city_id.name"/>, <span t-field="sucursal.partner_id.city"/>/
+                                </t>
+                            </t>
+                          </t>
+                          <br/>
+                            <span> Teléfono: <span t-field="company.phone"/></span><br/>
+                            <span>E-Mail: <span t-field="company.email"/></span><br/>
+                            <span t-field="company.website"/>
                         </p>
                     </div>
                     <div class="col-5">
@@ -68,6 +71,13 @@
                             SII - <span t-field="company.sii_regional_office_id.name"/>
                         </p>
                     </div>
+                    <t t-if="o.origin">
+                        <div class="row" style="text-align: center !important;" name="div_origin">
+                            <div class="col-12" style="text-align: center; color: black; font-size: 12px; margin-top: 5px;">
+                                Documento de Origen: <t t-esc="o.origin"/>
+                            </div>
+                        </div>
+                    </t>
                   </div>
                 </div>
                 <div class="row" style="display:none !important;">
@@ -82,7 +92,14 @@
                         <td style="border-top:0px !important;padding:4px !important;"><strong >Señor (es):</strong></td>
                         <td style="border-top:0px !important;padding:4px !important;min-width:450px;max-width:450px;"><span t-field="partner_id.commercial_partner_id.name"/></td>
                         <td style="border-top:0px !important;padding:4px !important;"><strong>Fecha:</strong></td>
-                        <td style="border-top:0px !important;padding:4px !important;"><t t-if="'scheduled_date' in o and o.scheduled_date"><span t-field="o.scheduled_date"/></t></td>
+                        <td style="border-top:0px !important;padding:4px !important;">
+                          <t t-if="o.state == 'done'">
+                              <span t-field="o.date_done"/>
+                          </t>
+                          <t t-if="o.state != 'done'">
+                              <span t-field="o.scheduled_date"/>
+                          </t>
+                        </td>
                       </tr>
                       <tr>
                         <td style="border-top:0px !important;padding:4px !important;"><strong>RUT:</strong></td>
