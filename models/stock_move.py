@@ -10,12 +10,15 @@ class StockMove(models.Model):
     _inherit = 'stock.move'
 
     @api.model
-    def create(self, vals):
-        if 'picking_id' in vals:
-            picking = self.env['stock.picking'].browse(vals['picking_id'])
-            if picking and picking.company_id:
-                vals['company_id'] = picking.company_id.id
-        return super(StockMove, self).create(vals)
+    def _prepare_merge_moves_distinct_fields(self):
+        fields = super(StockMove, self)._prepare_merge_moves_distinct_fields()
+        fields += [
+            'precio_unitario',
+            'discount',
+            'move_line_tax_ids',
+            'currency_id',
+        ]
+        return fields
 
     def _set_price_from(self):
         return
@@ -46,8 +49,8 @@ class StockMove(models.Model):
             if not rec.name:
                 rec.name = rec.product_id.name
 
-    @api.onchange('name', 'product_id', 'move_line_tax_ids', 'product_uom_qty', 'precio_unitario', 'quantity_done')
-    @api.depends('name', 'product_id', 'move_line_tax_ids', 'product_uom_qty', 'precio_unitario', 'quantity_done')
+    @api.onchange('name', 'description_picking', 'product_id', 'move_line_tax_ids', 'product_uom_qty', 'precio_unitario', 'quantity_done')
+    @api.depends('name', 'description_picking', 'product_id', 'move_line_tax_ids', 'product_uom_qty', 'precio_unitario', 'quantity_done')
     def _compute_amount(self):
         for rec in self:
             qty = rec.quantity_done
@@ -57,9 +60,6 @@ class StockMove(models.Model):
             rec.price_untaxed = taxes['total_excluded']
             rec.subtotal = taxes['total_included']
 
-    name = fields.Char(
-            string="Nombre",
-        )
     subtotal = fields.Monetary(
             compute='_compute_amount',
             string='Subtotal',
@@ -67,7 +67,7 @@ class StockMove(models.Model):
         )
     precio_unitario = fields.Float(
             string='Precio Unitario',
-            digits=dp.get_precision('Product Price'),
+            digits='Product Price',
         )
     price_untaxed = fields.Monetary(
             string='Price Untaxed',
@@ -82,14 +82,12 @@ class StockMove(models.Model):
             domain=[('type_tax_use', '!=', 'none'), '|', ('active', '=', False), ('active', '=', True)],
         )
     discount = fields.Float(
-            digits=dp.get_precision('Discount'),
+            digits='Discount',
             string='Discount (%)',
         )
     currency_id = fields.Many2one(
             'res.currency',
             string='Currency',
-            required=True,
             states={'draft': [('readonly', False)]},
-            default=lambda self: self.env.user.company_id.currency_id.id,
-            track_visibility='always',
+            default=lambda self: self.env.user.company_id.currency_id.id
         )

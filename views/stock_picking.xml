@@ -34,7 +34,6 @@
                 </field>
 
                 <xpath expr="//field[@name='move_ids_without_package']/tree//field[@name='product_uom']" position="after">
-                  <field name="name"/>
                   <field name="precio_unitario"/>
                   <field name="price_untaxed" invisible="True" />
                   <field name="move_line_tax_ids" widget="many2many_tags"  domain="[('type_tax_use','=','sale'),('company_id','=',parent.company_id)]" srting="Impuestos"/>
