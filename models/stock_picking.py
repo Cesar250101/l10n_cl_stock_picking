@@ -617,10 +617,9 @@ class StockPicking(models.Model):
                                     'TasaImp': amount,
                                 }
                         )
-            lines['NmbItem'] = line.product_id.name
-            lines['DscItem'] = line.name
-            if line.product_id.default_code:
-                lines['NmbItem'] = line.product_id.name.replace('['+line.product_id.default_code+'] ','')
+            lines['NmbItem'] = line.product_id.with_context(
+                    display_default_code=False).name
+            lines['DscItem'] = line.description_picking
             qty = round(line.quantity_done, 4)
             if qty <=0:
                 qty = round(line.product_uom_qty, 4)
