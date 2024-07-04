@@ -66,7 +66,7 @@ class PickingToInvoiceD(models.Model):
             sp = False
             if inv.is_invoice():
                 for ref in inv.referencias:
-                    if ref.sii_referencia_TpoDocRef.sii_code in [ 52 ]:
+                    if ref.sii_referencia_TpoDocRef.es_guia():
                         sp = self.env['stock.picking'].search([
                             ('sii_document_number', '=', ref.origen)])
                 if sp:
