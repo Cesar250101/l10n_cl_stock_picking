@@ -18,72 +18,72 @@
           <t t-set="partner_id" t-value="o.partner_id" />
           <t t-set="commercial_partner_id" t-value="o.partner_id.commercial_partner_id" />
           <t t-set="logo" t-value="company.logo" />
-              <div class="header">
-                <div class="row">
-                    <div class="col-6">
-                        <p style="text-align:left;text-transform:uppercase;font-weight:900;font-size:20px;color:black;">
-                            <span t-field="company.partner_id.ref"/>
-                        </p>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-7" style="text-align: center">
-                        <img t-if="logo" t-att-src="image_data_uri(logo)" style="max-height: 45px;"/>
-                        <h4 style="text-transform:uppercase;font-weight:900;font-size:18px;color:black;">
-                            <span t-field="company.name"/>
-                        </h4>
-                        <p style="text-align:left; font-size:10px;color:black; text-transform:uppercase; word-wrap: break-word">
-                            <span t-field="company.activity_description.name" style="color:black; text-align:center;"/><br/>
-                            <!-- domicilios -->
-                            <span>Casa Matriz: </span><span t-field="company.street"/>, <span t-field="company.city_id.name"/>, <span t-field="company.city"/>
-                          <t t-if="o.company_id.sucursal_ids and o.use_documents">
-                              <t t-if="len(o.company_id.sucursal_ids) == 1">
-                               <span>Sucursal: </span><span t-field="o.company_id.sucursal_ids[0].partner_id.street"/>, <span t-field="o.company_id.sucursal_ids[0].partner_id.city_id.name"/>, <span t-field="o.company_id.sucursal_ids[0].partner_id.city"/>
-                            </t>
-                            <t t-else="">
-                              <span>Sucursales: </span>
-                                <t t-foreach="o.company_id.sucursal_ids" t-as="sucursal">
-                                  <span t-field="sucursal.partner_id.street"/>, <span t-field="sucursal.partner_id.city_id.name"/>, <span t-field="sucursal.partner_id.city"/>/
-                                </t>
-                            </t>
-                          </t>
-                          <br/>
-                            <span> Teléfono: <span t-field="company.phone"/></span><br/>
-                            <span>E-Mail: <span t-field="company.email"/></span><br/>
-                            <span t-field="company.website"/>
-                        </p>
-                    </div>
-                    <div class="col-5">
-                      <div style="border: 3px solid red;text-align: center;font-size:20px;padding-bottom:0px !important; height:145px; width:360px;">
-                        <h6 style="color:red;font-size:20px;padding-bottom:10px; padding-top:5px; font-family:Arial;">
-                            R.U.T.: <span t-field="company.document_number"/>
-                        </h6>
-                        <h6 name="document_class_id" style="line-height:23px;font-size:20px;color:red;text-align:center;text-transform:uppercase;padding-bottom:10px;font-family:Arial;">
-                           <span t-field="o.document_class_id.name"/>
-                        </h6>
-                        <h6 t-if="o.sii_document_number" style="color: red;text-align: center;font-size:20px;padding-bottom:5px;font-family:Arial;">
-                            N° <span t-esc="o.sii_document_number"/>
-                        </h6>
-                        <br/>
-                    </div>
-                    <div class="row" style="text-align: center !important;">
-                        <p style="color: red; font-size: 11px; text-transform:uppercase; width:100%; text-align: center;">
-                            SII - <span t-field="company.sii_regional_office_id.name"/>
-                        </p>
-                    </div>
-                    <t t-if="o.origin">
-                        <div class="row" style="text-align: center !important;" name="div_origin">
-                            <div class="col-12" style="text-align: center; color: black; font-size: 12px; margin-top: 5px;">
-                                Documento de Origen: <t t-esc="o.origin"/>
-                            </div>
-                        </div>
-                    </t>
-                  </div>
-                </div>
-                <div class="row" style="display:none !important;">
-                  <div name="company_address"/>
+          <div class="header">
+            <div class="row">
+                <div class="col-6">
+                    <p style="text-align:left;text-transform:uppercase; font-size:20px;color:black;">
+                        <span t-field="company.partner_id.ref"/>
+                    </p>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-7" style="text-align: center; color:black;">
+                    <img t-if="logo" t-att-src="image_data_uri(logo)" style="max-height: 45px;"/>
+                    <h4 style="text-transform:uppercase; font-size:18px">
+                        <span t-field="company.name"/>
+                    </h4>
+                    <p style="text-align:left; font-size:10px; text-transform:uppercase; word-wrap: break-word">
+                        <span t-field="company.activity_description.name" style="text-align:center;"/><br/>
+                        <!-- domicilios -->
+                        <span>Casa Matriz: </span><span t-field="company.street"/>, <span t-field="company.city_id.name"/>, <span t-field="company.city"/>
+                      <t t-if="o.company_id.sucursal_ids and o.use_documents">
+                          <t t-if="len(o.company_id.sucursal_ids) == 1">
+                           <span>Sucursal: </span><span t-field="o.company_id.sucursal_ids[0].partner_id.street"/>, <span t-field="o.company_id.sucursal_ids[0].partner_id.city_id.name"/>, <span t-field="o.company_id.sucursal_ids[0].partner_id.city"/>
+                        </t>
+                        <t t-else="">
+                          <span>Sucursales: </span>
+                            <t t-foreach="o.company_id.sucursal_ids" t-as="sucursal">
+                              <span t-field="sucursal.partner_id.street"/>, <span t-field="sucursal.partner_id.city_id.name"/>, <span t-field="sucursal.partner_id.city"/>/
+                            </t>
+                        </t>
+                      </t>
+                      <br/>
+                        <span> Teléfono: <span t-field="company.phone"/></span><br/>
+                        <span>E-Mail: <span t-field="company.email"/></span><br/>
+                        <span t-field="company.website"/>
+                    </p>
+                </div>
+                <div class="col-5">
+                  <div style="border: 3px solid red;text-align: center;font-size:20px;padding-bottom:0px !important; height:145px; width:330px;">
+                    <h6 style="color:red;font-size:20px;padding-bottom:10px; padding-top:5px; font-family:Arial;">
+                        R.U.T.: <span t-field="company.document_number"/>
+                    </h6>
+                    <h6 name="document_class_id" style="line-height:20px; font-size: 18px;color:red;text-align:center;text-transform:uppercase;padding-bottom: 9px;font-family:Arial;">
+                       <span t-field="o.document_class_id.name"/>
+                    </h6>
+                    <h6 t-if="o.sii_document_number" style="color: red;text-align: center;font-size:20px;padding-bottom:5px;font-family:Arial;">
+                        N° <span t-esc="o.sii_document_number"/>
+                    </h6>
+                    <br/>
+                </div>
+                <div class="row" style="text-align: center !important;">
+                    <p style="color: red; font-size: 11px; text-transform:uppercase; width:100%; text-align: center;">
+                        SII - <span t-field="company.sii_regional_office_id.name"/>
+                    </p>
+                </div>
+                <t t-if="o.origin">
+                    <div class="row" style="text-align: center !important;" name="div_origin">
+                        <div class="col-12" style="text-align: center; color: black; font-size: 12px; margin-top: 4px;">
+                            Documento de Origen: <t t-esc="o.origin"/>
+                        </div>
+                    </div>
+                </t>
+              </div>
+            </div>
+            <div class="row" style="display:none !important;">
+              <div name="company_address"/>
+            </div>
+          </div>
           <div class="page" style="padding-top:50px;">
               <div class="row" style="border: 2px solid black;">
                   <table class="table cl_invoice">
