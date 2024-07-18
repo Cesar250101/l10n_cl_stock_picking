@@ -511,7 +511,7 @@ class StockPicking(models.Model):
         partner_id = self.partner_id or self.company_id.partner_id
         if not partner_id.commercial_partner_id.vat :
             raise UserError("Debe Ingresar RUT Receptor")
-        Receptor['RUTRecep'] = partner_id.rut()
+        Receptor['RUTRecep'] = partner_id.commercial_partner_id.rut()
         Receptor['RznSocRecep'] = partner_id.commercial_partner_id.name
         activity_description = self.activity_description or partner_id.activity_description
         if not activity_description:
