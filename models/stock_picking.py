@@ -117,7 +117,7 @@ class StockPicking(models.Model):
         #    for line in self.invoice_line_ids:
         #        for t in line.invoice_line_tax_ids:
         #            taxes = t.compute_all(totales[t], self.currency_id, 1)['taxes']
-        #            tax_grouped = self._get_grouped_taxes(line, taxes, tax_grouped)
+        #            tax_grouped = self._get_grouped_taxes(line, taxes, tax_grouped)set_use_document
         #_logger.warning(tax_grouped)
         '''
         @TODO GDR para guías
@@ -243,8 +243,8 @@ class StockPicking(models.Model):
     document_class_id = fields.Many2one(
         'sii.document_class',
         string="Tipo de documento",
-        readonly=True,
-        states={'assigned':[('readonly',False)],'draft':[('readonly',False)]},
+        # readonly=True,
+        # states={'assigned':[('readonly',False)],'draft':[('readonly',False)]},
         default=_set_default_dc,
         domain=[('document_type', '=', 'stock_picking')]
     )
@@ -306,8 +306,6 @@ class StockPicking(models.Model):
     use_documents = fields.Boolean(
             string='Use Documents?',
             default=set_use_document,
-            readonly=True,
-            states={'assigned':[('readonly',False)],'draft':[('readonly',False)]},
         )
     reference = fields.One2many(
             'stock.picking.referencias',
@@ -342,23 +340,43 @@ class StockPicking(models.Model):
             default="1",
             readonly=False, states={'done':[('readonly',True)]},
         )
-    vehicle = fields.Many2one(
-            'fleet.vehicle',
-            string="Vehículo",
+    # vehicle = fields.Many2one(
+    #         'fleet.vehicle',
+    #         string="Vehículo",
+    #         readonly=False,
+    #         states={'done': [('readonly', True)]},
+    #     )
+    # vehicle = fields.Char(
+    #         string="Vehículo",
+    #         readonly=False,
+    #         states={'done': [('readonly', True)]},
+    #     )
+    
+    # chofer = fields.Many2one(
+    #         'res.partner',
+    #         string="Chofer",
+    #         readonly=False,
+    #         states={'done': [('readonly', True)]},
+    #     )
+    chofer_nombre = fields.Char(
+            string="Nombre Chofer",
             readonly=False,
             states={'done': [('readonly', True)]},
         )
-    chofer = fields.Many2one(
-            'res.partner',
-            string="Chofer",
+
+    rut_chofer = fields.Char(
+            string="Rut Chofer",
             readonly=False,
             states={'done': [('readonly', True)]},
         )
+
+
     patente = fields.Char(
             string="Patente",
             readonly=False,
             states={'done': [('readonly', True)]},
         )
+    
     contact_id = fields.Many2one(
             'res.partner',
             string="Contacto",
@@ -396,10 +414,10 @@ class StockPicking(models.Model):
             for m in self.move_ids:
                 m.company_id = self.company_id.id
 
-    @api.onchange('vehicle')
-    def _setChofer(self):
-        self.chofer = self.vehicle.driver_id
-        self.patente = self.vehicle.license_plate
+    # @api.onchange('vehicle')
+    # def _setChofer(self):
+    #     self.chofer = self.vehicle.driver_id
+    #     self.patente = self.vehicle.license_plate
 
     def _action_done(self):
         res = super(StockPicking, self)._action_done()
@@ -408,6 +426,24 @@ class StockPicking(models.Model):
                 continue
             s.sii_document_number = s.picking_type_id.warehouse_id.sequence_id.next_by_id()
             document_number = (s.document_class_id.doc_code_prefix or '') + str(s.sii_document_number)
+            disponible=self.search([('document_class_id','=',s.document_class_id.id),
+                                   ('sii_document_number','=',s.sii_document_number),
+                                   ('id','!=',s.id),
+                                   ('company_id','=',s.company_id.id)])
+            if disponible:
+                self.env.cr.execute("""
+                    SELECT sp.sii_document_number  
+                    FROM stock_picking sp 
+                    WHERE sp.company_id = %s
+                    AND sp.document_class_id = %s
+                    AND COALESCE(sp.sii_document_number, 0) != 0
+                    ORDER BY sii_document_number DESC 
+                    LIMIT 1
+                """, (s.company_id.id, s.document_class_id.id))
+                result = self.env.cr.fetchone()
+                sii_document_number = (result[0] if result else 0) + 1
+                document_number = (s.document_class_id.doc_code_prefix or '') + str(sii_document_number)
+                s.picking_type_id.warehouse_id.sequence_id.number_next_actual=sii_document_number+1
             s.name = document_number
             if s.picking_type_id.code in ['outgoing', 'internal']:# @TODO diferenciar si es de salida o entrada para internal
                 s.responsable_envio = self.env.uid
@@ -418,6 +454,7 @@ class StockPicking(models.Model):
                 if metodo == 'manual':
                     continue
                 tiempo_pasivo = datetime.now()
+                tipo_trabajo = 'envio'
                 if metodo == 'diferido':
                     tipo_trabajo = 'pasivo'
                     tiempo_pasivo += timedelta(
@@ -533,9 +570,9 @@ class StockPicking(models.Model):
         if self.patente:
             Transporte['Patente'] = self.patente[:8]
         elif self.vehicle:
-            Transporte['Patente'] = self.vehicle.license_plate or ''
-        if self.transport_type in ['2', '3'] and self.chofer:
-            if not self.chofer.vat:
+            Transporte['Patente'] = self.patente or ''
+        if self.transport_type in ['2', '3'] and self.chofer_nombre:
+            if not self.chofer_nombre:
                 raise UserError("Debe llenar los datos del chofer")
             if self.transport_type == '2':
                 Transporte['RUTTrans'] = self.company_id.partner_id.rut()
@@ -543,10 +580,10 @@ class StockPicking(models.Model):
                 if not self.carrier_id.partner_id.vat:
                     raise UserError("Debe especificar el RUT del transportista, en su ficha de partner")
                 Transporte['RUTTrans'] = self.carrier_id.partner_id.rut()
-            if self.chofer:
+            if self.chofer_nombre:
                 Transporte['Chofer'] = {}
-                Transporte['Chofer']['RUTChofer'] = self.chofer.rut()
-                Transporte['Chofer']['NombreChofer'] = self.chofer.name[:30]
+                Transporte['Chofer']['RUTChofer'] = self.rut_chofer
+                Transporte['Chofer']['NombreChofer'] = self.chofer_nombre
         partner_id = self.partner_id or self.company_id.partner_id
         Transporte['DirDest'] = (partner_id.street or '')+ ' '+ (partner_id.street2 or '')
         Transporte['CmnaDest'] = partner_id.city_id.name or ''

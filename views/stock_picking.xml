@@ -19,7 +19,7 @@
             <field name="arch" type="xml">
                 <xpath expr="//div[hasclass('o_td_label')]" position="before">
                   <field name="use_documents" attrs="{'invisible': [('picking_type_code', '=', 'incoming')]}" string="Emitir Documento Tributario"/>
-                  <field name="document_class_id" options="{'no_create': True}" attrs="{'required': [('use_documents', '=', True)]}" />
+                  <field name="document_class_id" options="{'no_create': True}" attrs="{'required': [('use_documents', '=', True)],'invisible': [( 'use_documents', '=', False)]}" />
                   <field name="next_number" attrs="{'invisible': [('use_documents', '=', False)]}" />
                   <field name="sii_document_number" attrs="{'invisible': ['|', ( 'use_documents', '!=', False), ('document_class_id', '=', False)]}" string="Folio"/>
                 </xpath>
@@ -73,17 +73,18 @@
                         <label for="next_number" string="- Next Number: " attrs="{'invisible': ['|',('name','!=',False),('state','!=','draft')]}" class="oe_inline"/>
                         <field name="next_number" attrs="{'invisible': ['|',('name','!=',False),('state','!=','draft')]}" class="oe_inline"/>
                 </field>
-                <field name="move_type" position="after">
-                  <field name="transport_type" attrs="{'required':[('use_documents', '=', True)]}"/>
-                  <field name="move_reason" attrs="{'required':[('use_documents', '=', True)]}"/>
-                </field>
                 <field name="carrier_id" position="attributes">
                   <attribute name="attrs">{'invisible':[('transport_type', '!=', '3')], 'required':[('transport_type', '=', '3'), ('use_documents', '=', True)]}</attribute>
                 </field>
-                <field name="carrier_id" position="after">
-                  <field name="vehicle" attrs="{'required':[('transport_type','=', '2'), ('use_documents', '=', True)], 'invisible':[('transport_type','!=','2')]}"/>
-                  <field name="chofer" attrs="{'required':[('transport_type','=', '2'), ('use_documents', '=', True)], 'invisible':[('transport_type','!=','2')]}"/>
-                  <field name="patente" attrs="{'required':[('transport_type','in', ['2']), ('use_documents', '=', True)]}"/>
+                <field name="contact_id" position="after">
+                  <!-- <field name="vehicle" attrs="{'required':[('transport_type','=', '2'), ('use_documents', '=', True)], 'invisible':[('transport_type','!=','2')]}"/> -->
+
+                  <field name="chofer_nombre" attrs="{'required':[('use_documents', '=', True)], 'invisible':[('use_documents','=',False)]}"/>
+                  <field name="rut_chofer" attrs="{'required':[('use_documents', '=', True)], 'invisible':[('use_documents','=',False)]}"/>
+                  <field name="patente" attrs="{'required':[('use_documents', '=', True)] , 'invisible':[('use_documents','=',False)]}"/>
+                  <field name="transport_type" attrs="{'required':[('use_documents', '=', True)], 'invisible':[('use_documents','=',False)]}"/>
+                  <field name="move_reason" attrs="{'required':[('use_documents', '=', True)], 'invisible':[('use_documents','=',False)]}"/>
+
                 </field>
                 <notebook>
                     <page string="Facturación Electrónica" name="electronic_document" >
