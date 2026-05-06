@@ -9,6 +9,10 @@
                 <field name="origin" position="after">
                     <field name="reference"/>
                 </field>
+                <field name="name" position="after">
+                  <field name="sii_document_number"/>
+                </field>
+                
             </field>
         </record>
 
@@ -20,7 +24,7 @@
                 <xpath expr="//div[hasclass('o_td_label')]" position="before">
                   <field name="use_documents" attrs="{'invisible': [('picking_type_code', '=', 'incoming')]}" string="Emitir Documento Tributario"/>
                   <field name="document_class_id" options="{'no_create': True}" attrs="{'required': [('use_documents', '=', True)],'invisible': [( 'use_documents', '=', False)]}" />
-                  <field name="next_number" attrs="{'invisible': [('use_documents', '=', False)]}" />
+                  <!-- <field name="next_number" attrs="{'invisible': [('use_documents', '=', False)]}" /> -->
                   <field name="sii_document_number" attrs="{'invisible': ['|', ( 'use_documents', '!=', False), ('document_class_id', '=', False)]}" string="Folio"/>
                 </xpath>
 

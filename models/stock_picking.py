@@ -424,27 +424,28 @@ class StockPicking(models.Model):
         for s in self:
             if not s.use_documents or s.picking_type_id.warehouse_id.restore_mode:
                 continue
-            s.sii_document_number = s.picking_type_id.warehouse_id.sequence_id.next_by_id()
-            document_number = (s.document_class_id.doc_code_prefix or '') + str(s.sii_document_number)
-            disponible=self.search([('document_class_id','=',s.document_class_id.id),
-                                   ('sii_document_number','=',s.sii_document_number),
-                                   ('id','!=',s.id),
-                                   ('company_id','=',s.company_id.id)])
+            next_number = s.picking_type_id.warehouse_id.sequence_id.next_by_id()
+            disponible = self.search([
+                ('document_class_id', '=', s.document_class_id.id),
+                ('sii_document_number', '=', next_number),
+                ('id', '!=', s.id),
+                ('company_id', '=', s.company_id.id),
+            ])
             if disponible:
                 self.env.cr.execute("""
-                    SELECT sp.sii_document_number  
-                    FROM stock_picking sp 
+                    SELECT sp.sii_document_number
+                    FROM stock_picking sp
                     WHERE sp.company_id = %s
                     AND sp.document_class_id = %s
                     AND COALESCE(sp.sii_document_number, 0) != 0
-                    ORDER BY sii_document_number DESC 
+                    ORDER BY sii_document_number DESC
                     LIMIT 1
                 """, (s.company_id.id, s.document_class_id.id))
                 result = self.env.cr.fetchone()
-                sii_document_number = (result[0] if result else 0) + 1
-                document_number = (s.document_class_id.doc_code_prefix or '') + str(sii_document_number)
-                s.picking_type_id.warehouse_id.sequence_id.number_next_actual=sii_document_number+1
-            s.name = document_number
+                next_number = (result[0] if result else 0) + 1
+                s.picking_type_id.warehouse_id.sequence_id.number_next_actual = next_number + 1
+            s.sii_document_number = next_number
+            s.name = (s.document_class_id.doc_code_prefix or '') + str(next_number)
             if s.picking_type_id.code in ['outgoing', 'internal']:# @TODO diferenciar si es de salida o entrada para internal
                 s.responsable_envio = self.env.uid
                 s.sii_result = 'NoEnviado'
