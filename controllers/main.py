@@ -1,5 +1,5 @@
 from odoo import models, http
-from odoo.http import request
+from odoo.http import request, content_disposition
 
 class BinaryGuia(http.Controller):
 
@@ -17,11 +17,11 @@ class BinaryGuia(http.Controller):
     @http.route(["/download/xml/guia/<model('stock.picking'):document_id>"], type='http', auth='user')
     def download_guia(self, document_id, **post):
         filename = ('Guia_%s.xml' % document_id.sii_document_number).replace(' ','_')
-        filecontent = document_id.sii_xml_request
+        filecontent = document_id.sii_xml_request.xml_envio
         return self.document(filename, filecontent)
 
     @http.route(["/download/xml/libro_guia/<model('stock.picking.book'):document_id>"], type='http', auth='user')
     def download_libro_guia(self, document_id, **post):
         filename = ('Lbro_Guia_%s.xml' % document_id.name).replace(' ','_')
-        filecontent = document_id.sii_xml_request
+        filecontent = document_id.sii_xml_request.xml_envio
         return self.document(filename, filecontent)

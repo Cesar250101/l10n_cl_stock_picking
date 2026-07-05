@@ -392,6 +392,89 @@ class StockPicking(models.Model):
             string="Recepción del Cliente",
             readonly=True,
         )
+    use_codigos_adicionales = fields.Boolean(
+            string='Definir Códigos Adicionales por Línea',
+            default=False,
+            states={'done': [('readonly', True)]},
+        )
+    picking_cdg_item_ids = fields.One2many(
+            'stock.move.cdg.item',
+            'picking_id',
+            string='Códigos Adicionales',
+        )
+
+    @api.onchange('use_codigos_adicionales')
+    def _onchange_use_codigos_adicionales(self):
+        if not self.use_codigos_adicionales:
+            return
+        moves = self.move_ids_without_package
+        if not moves:
+            self.use_codigos_adicionales = False
+            return {
+                'warning': {
+                    'title': _('Sin líneas de detalle'),
+                    'message': _(
+                        'Debe agregar líneas de detalle (productos) antes de '
+                        'definir códigos adicionales por línea.'
+                    ),
+                }
+            }
+        # Copia inmediata para que el usuario vea las líneas al activar el
+        # toggle. En una guía nueva los move_id apuntan a líneas todavía sin
+        # guardar; si el cliente web no logra enlazarlos, create()/write()
+        # los reconstruye del lado servidor (ver _strip_unlinked_cdg_items y
+        # _sync_codigos_adicionales).
+        existing_move_ids = self.picking_cdg_item_ids.move_id.ids
+        new_lines = [
+            (0, 0, {'move_id': move.id})
+            for move in moves
+            if move.id not in existing_move_ids
+        ]
+        if new_lines:
+            self.picking_cdg_item_ids = new_lines
+
+    @api.model
+    def _strip_unlinked_cdg_items(self, vals):
+        """Quita los comandos de creación de códigos adicionales sin move_id.
+
+        En una guía nueva el cliente web no siempre logra enlazar el move_id
+        (apunta a una línea aún sin guardar) y lo envía vacío, lo que viola la
+        restricción NOT NULL. Esos los descartamos: _sync_codigos_adicionales
+        los vuelve a crear correctamente una vez que las líneas tienen id real.
+        """
+        cmds = vals.get('picking_cdg_item_ids')
+        if not cmds:
+            return vals
+        cleaned = [
+            cmd for cmd in cmds
+            if not (isinstance(cmd, (list, tuple)) and cmd[0] == 0
+                    and not (cmd[2] or {}).get('move_id'))
+        ]
+        if len(cleaned) != len(cmds):
+            vals = dict(vals, picking_cdg_item_ids=cleaned)
+        return vals
+
+    def _sync_codigos_adicionales(self):
+        for picking in self:
+            if not picking.use_codigos_adicionales:
+                continue
+            existing_move_ids = picking.picking_cdg_item_ids.move_id.ids
+            missing_moves = picking.move_ids.filtered(lambda m: m.id not in existing_move_ids)
+            for move in missing_moves:
+                self.env['stock.move.cdg.item'].create({'move_id': move.id})
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        vals_list = [self._strip_unlinked_cdg_items(vals) for vals in vals_list]
+        pickings = super().create(vals_list)
+        pickings._sync_codigos_adicionales()
+        return pickings
+
+    def write(self, vals):
+        vals = self._strip_unlinked_cdg_items(vals)
+        res = super().write(vals)
+        self._sync_codigos_adicionales()
+        return res
 
     @api.onchange('picking_type_id')
     def onchange_picking_type(self,):
@@ -562,8 +645,8 @@ class StockPicking(models.Model):
         if not partner_id.commercial_partner_id.street:
             raise UserError("Debe Ingresar Dirección Receptor")
         Receptor['DirRecep'] = (partner_id.commercial_partner_id.street) + ' ' + ((partner_id.commercial_partner_id.street2) or '')
-        Receptor['CmnaRecep'] = partner_id.commercial_partner_id.city_id.name
-        Receptor['CiudadRecep'] = partner_id.commercial_partner_id.city
+        Receptor['CmnaRecep'] = partner_id.commercial_partner_id.city_id.name or ''
+        Receptor['CiudadRecep'] = partner_id.commercial_partner_id.city or ''
         return Receptor
 
     def _transporte(self):
@@ -630,10 +713,20 @@ class StockPicking(models.Model):
                 no_product = True
             lines = {}
             lines['NroLinDet'] = line_number
-            if line.product_id.default_code and not no_product:
-                lines['CdgItem'] = {}
-                lines['CdgItem']['TpoCodigo'] = 'INT1'
-                lines['CdgItem']['VlrCodigo'] = line.product_id.default_code
+            if not no_product:
+                cdg_items = []
+                if line.product_id.default_code:
+                    cdg_items.append({'TpoCodigo': 'INT1', 'VlrCodigo': line.product_id.default_code})
+                if self.use_codigos_adicionales:
+                    for cdg in line.cdg_item_ids:
+                        if not cdg.vlr_codigo:
+                            raise UserError(_(
+                                'Falta el Valor Código en la línea de "%s" '
+                                '(pestaña Códigos Adicionales).'
+                            ) % line.product_id.display_name)
+                        cdg_items.append({'TpoCodigo': cdg.tpo_codigo, 'VlrCodigo': cdg.vlr_codigo})
+                if cdg_items:
+                    lines['CdgItem'] = cdg_items
             taxInclude = False
             lines["Impuesto"] = []
             if line.move_line_tax_ids:
@@ -753,6 +846,8 @@ class StockPicking(models.Model):
             },
         ]
         result = fe.timbrar(datos)
+        if not result:
+            raise UserError('Error al timbrar: la librería no retornó resultado.')
         if result[0].get('error'):
             raise UserError(result[0].get('error'))
         self.write({

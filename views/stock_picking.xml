@@ -37,6 +37,20 @@
                   <field name="contact_id" />
                 </field>
 
+                <field name="move_ids_without_package" position="before">
+                    <div attrs="{'invisible':[('use_documents','=',False)]}"
+                         class="d-flex align-items-center gap-3 px-3 py-2 mb-2 rounded"
+                         style="background-color: #f0f4ff; border: 1px solid #c8d8f8;">
+                        <field name="use_codigos_adicionales"
+                               widget="boolean_toggle"
+                               nolabel="1"
+                               attrs="{'readonly': [('state', 'in', ['done', 'cancel'])]}"/>
+                        <label for="use_codigos_adicionales"
+                               class="mb-0 fw-semibold"
+                               style="color: #3d5a99; font-size: 13px; cursor: pointer;"/>
+                    </div>
+                </field>
+
                 <xpath expr="//field[@name='move_ids_without_package']/tree//field[@name='product_uom']" position="after">
                   <field name="precio_unitario"/>
                   <field name="price_untaxed" invisible="True" />
@@ -44,6 +58,20 @@
                   <field name="discount" string="Descuento"/>
                   <field name="subtotal"/>
                   <field name="currency_id" invisible="1"/>
+                  <field name="use_codigos_adicionales" invisible="1"/>
+                </xpath>
+                <!-- form popup de cada línea: agrega códigos adicionales -->
+                <xpath expr="//field[@name='move_ids_without_package']/form" position="inside">
+                  <group string="Códigos Adicionales de Ítem"
+                         attrs="{'invisible': [('use_codigos_adicionales', '=', False)]}">
+                    <field name="use_codigos_adicionales" invisible="1"/>
+                    <field name="cdg_item_ids" nolabel="1">
+                      <tree editable="bottom">
+                        <field name="tpo_codigo" string="Tipo Código"/>
+                        <field name="vlr_codigo" string="Valor Código"/>
+                      </tree>
+                    </field>
+                  </group>
                 </xpath>
                 <xpath expr="//field[@name='move_ids_without_package']/..//button[@name='action_put_in_pack']" position="after">
                   <group class="oe_subtotal_footer oe_right">
@@ -55,6 +83,21 @@
                   </group>
                 </xpath>
                 <page name="extra" position="before">
+                  <page string="Códigos Adicionales"
+                        attrs="{'invisible': [('use_codigos_adicionales', '=', False)]}">
+                    <field name="picking_cdg_item_ids" nolabel="1"
+                           attrs="{'readonly': [('state', 'in', ['done', 'cancel'])]}">
+                      <tree editable="bottom">
+                        <field name="product_id" string="Producto" readonly="1"/>
+                        <field name="move_id" string="Línea" optional="hide"
+                               domain="[('id', 'in', parent.move_ids_without_package)]"
+                               context="{'cdg_item': True}"
+                               options="{'no_create': True}"/>
+                        <field name="tpo_codigo" string="Tipo Código"/>
+                        <field name="vlr_codigo" string="Valor Código"/>
+                      </tree>
+                    </field>
+                  </page>
                   <page string="Referencias DTE">
                     <field name="reference" mode="tree" attrs="{'readonly':[('state','in',['cancel','done'])]}">
                       <form>
@@ -88,7 +131,6 @@
                   <field name="patente" attrs="{'required':[('use_documents', '=', True)] , 'invisible':[('use_documents','=',False)]}"/>
                   <field name="transport_type" attrs="{'required':[('use_documents', '=', True)], 'invisible':[('use_documents','=',False)]}"/>
                   <field name="move_reason" attrs="{'required':[('use_documents', '=', True)], 'invisible':[('use_documents','=',False)]}"/>
-
                 </field>
                 <notebook>
                     <page string="Facturación Electrónica" name="electronic_document" >
@@ -128,6 +170,27 @@
                 <field name="subtotal"/>
                 <field name="currency_id" invisible="1"/>
               </field>
+            </field>
+        </record>
+
+        <!-- Vista form inline de stock.move para editar códigos adicionales en popup -->
+        <record id="view_stock_move_cdg_item_form" model="ir.ui.view">
+            <field name="name">stock.move.form.cdg.item</field>
+            <field name="model">stock.move</field>
+            <field name="inherit_id" ref="stock.view_move_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//sheet" position="inside">
+                    <group string="Códigos Adicionales"
+                           attrs="{'invisible': [('use_codigos_adicionales', '=', False)]}">
+                        <field name="use_codigos_adicionales" invisible="1"/>
+                        <field name="cdg_item_ids" nolabel="1">
+                            <tree editable="bottom">
+                                <field name="tpo_codigo" string="Tipo Código"/>
+                                <field name="vlr_codigo" string="Valor Código"/>
+                            </tree>
+                        </field>
+                    </group>
+                </xpath>
             </field>
         </record>
     </data>

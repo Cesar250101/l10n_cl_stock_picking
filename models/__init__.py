@@ -7,7 +7,7 @@ from . import procurement_group
 from . import purchase_order
 from . import sale_order
 from . import sii_xml_envio
-from . import stock_move
+from . import stock_move  # también registra StockMoveCdgItem
 from . import stock_picking
 from . import stock_rule
 from . import stock_warehouse

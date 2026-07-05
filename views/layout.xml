@@ -202,6 +202,7 @@
                    <thead>
                        <tr style="font-size: 11px !important;">
                         <th>Sku</th>
+                          <th t-if="o.use_codigos_adicionales">QBLI</th>
                           <th>Cantidad</th>
                           <th>Descripción</th>
                           <th class="text-right">Precio Unitario</th>
@@ -213,6 +214,10 @@
                        <tr t-foreach="o.move_ids.sorted(key=lambda m: m.product_id.id)" t-as="l" style="line-height: 1.2 !important;">
                             <td style="padding: 2px 4px !important;">
                                 <span t-esc="l.product_id.default_code" />
+                            </td>
+                            <td t-if="o.use_codigos_adicionales" style="padding: 2px 4px !important;">
+                                <t t-set="qbli_code" t-value="l.cdg_item_ids.filtered(lambda c: c.tpo_codigo == 'QBLI')"/>
+                                <span t-if="qbli_code" t-esc="qbli_code[0].vlr_codigo"/>
                             </td>
                            <td style="padding: 2px 4px !important;">
                                <span t-field="l.quantity_done"/>

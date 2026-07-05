@@ -9,6 +9,17 @@ _logger = logging.getLogger(__name__)
 class StockMove(models.Model):
     _inherit = 'stock.move'
 
+    def name_get(self):
+        if self._context.get('cdg_item'):
+            result = []
+            for move in self:
+                name = move.description_picking or (move.product_id.display_name if move.product_id else move.name or str(move.id))
+                if name == move.product_id.name:
+                    name = move.product_id.display_name
+                result.append((move.id, name))
+            return result
+        return super().name_get()
+
     @api.model
     def _prepare_merge_moves_distinct_fields(self):
         fields = super(StockMove, self)._prepare_merge_moves_distinct_fields()
@@ -91,3 +102,51 @@ class StockMove(models.Model):
             states={'draft': [('readonly', False)]},
             default=lambda self: self.env.user.company_id.currency_id.id
         )
+    cdg_item_ids = fields.One2many(
+            'stock.move.cdg.item',
+            'move_id',
+            string='Códigos Adicionales',
+        )
+    use_codigos_adicionales = fields.Boolean(
+            related='picking_id.use_codigos_adicionales',
+            string='Definir Códigos Adicionales',
+            store=False,
+        )
+
+
+class StockMoveCdgItem(models.Model):
+    _name = 'stock.move.cdg.item'
+    _description = 'Código adicional de ítem en línea de guía'
+
+    move_id = fields.Many2one(
+        'stock.move',
+        string='Línea',
+        ondelete='cascade',
+        index=True,
+        required=True,
+    )
+    picking_id = fields.Many2one(
+        related='move_id.picking_id',
+        string='Guía',
+        store=True,
+        index=True,
+    )
+    product_id = fields.Many2one(
+        related='move_id.product_id',
+        string='Producto',
+        store=True,
+    )
+    tpo_codigo = fields.Selection(
+        [
+            ('INT1', 'INT1 - Código interno'),
+            ('QBLI', 'QBLI - Código de barras'),
+            ('EAN13', 'EAN13'),
+            ('DUN14', 'DUN14'),
+            ('EAN8', 'EAN8'),
+            ('STKPICKING', 'STKPICKING - Picking'),
+        ],
+        string='Tipo Código',
+        required=True,
+        default='QBLI',
+    )
+    vlr_codigo = fields.Char(string='Valor Código')
