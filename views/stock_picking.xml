@@ -131,6 +131,7 @@
                   <field name="patente" attrs="{'required':[('use_documents', '=', True)] , 'invisible':[('use_documents','=',False)]}"/>
                   <field name="transport_type" attrs="{'required':[('use_documents', '=', True)], 'invisible':[('use_documents','=',False)]}"/>
                   <field name="move_reason" attrs="{'required':[('use_documents', '=', True)], 'invisible':[('use_documents','=',False)]}"/>
+                  <field name="use_codigos_adicionales" attrs="{'invisible':[('use_documents','=',False)]}"/>
                 </field>
                 <notebook>
                     <page string="Facturación Electrónica" name="electronic_document" >

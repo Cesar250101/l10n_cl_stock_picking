@@ -402,7 +402,6 @@ class StockPicking(models.Model):
             'picking_id',
             string='Códigos Adicionales',
         )
-
     @api.onchange('use_codigos_adicionales')
     def _onchange_use_codigos_adicionales(self):
         if not self.use_codigos_adicionales:
@@ -649,6 +648,17 @@ class StockPicking(models.Model):
         Receptor['CiudadRecep'] = partner_id.commercial_partner_id.city or ''
         return Receptor
 
+    def _formatear_rut_chofer(self, rut):
+        # El XSD del SII exige RUTChofer con guión antes del dígito
+        # verificador ('[0-9]+-([0-9]|K)'); el campo se captura como texto
+        # libre, así que se normaliza acá antes de armar el DTE.
+        if not rut:
+            return rut
+        limpio = rut.strip().replace(".", "").replace("-", "").replace(" ", "")
+        if len(limpio) < 2:
+            return rut
+        return limpio[:-1] + "-" + limpio[-1].upper()
+
     def _transporte(self):
         Transporte = {}
         if self.patente:
@@ -666,8 +676,11 @@ class StockPicking(models.Model):
                 Transporte['RUTTrans'] = self.carrier_id.partner_id.rut()
             if self.chofer_nombre:
                 Transporte['Chofer'] = {}
-                Transporte['Chofer']['RUTChofer'] = self.rut_chofer
-                Transporte['Chofer']['NombreChofer'] = self.chofer_nombre
+                Transporte['Chofer']['RUTChofer'] = self._formatear_rut_chofer(self.rut_chofer)
+                # `NombreChofer[:30]` en facturacion_electronica revienta con
+                # "'bool' object is not subscriptable" si el valor llega vacío,
+                # porque el getter devuelve False en vez de ''.
+                Transporte['Chofer']['NombreChofer'] = self.chofer_nombre or ''
         partner_id = self.partner_id or self.company_id.partner_id
         Transporte['DirDest'] = (partner_id.street or '')+ ' '+ (partner_id.street2 or '')
         Transporte['CmnaDest'] = partner_id.city_id.name or ''
@@ -749,8 +762,12 @@ class StockPicking(models.Model):
                                 }
                         )
             lines['NmbItem'] = line.product_id.with_context(
-                    display_default_code=False).name
-            lines['DscItem'] = line.description_picking
+                    display_default_code=False).name or ''
+            # `description_picking` vacío llega como False desde Odoo, y el
+            # getter DscItem de facturacion_electronica hace `val[:1000]` sin
+            # comprobar el tipo: revienta con "'bool' object is not
+            # subscriptable" al timbrar. Se normaliza a cadena vacía.
+            lines['DscItem'] = line.description_picking or ''
             qty = round(line.quantity_done, 4)
             if qty <=0:
                 qty = round(line.product_uom_qty, 4)
@@ -761,7 +778,7 @@ class StockPicking(models.Model):
             if self.move_reason in ['5']:
                 no_product = True
             if not no_product:
-                lines['UnmdItem'] = line.product_uom.name[:4]
+                lines['UnmdItem'] = (line.product_uom.name or '')[:4]
                 if line.precio_unitario > 0:
                     lines['PrcItem'] = round(line.precio_unitario, 4)
             if line.discount > 0:

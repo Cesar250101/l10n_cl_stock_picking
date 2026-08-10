@@ -149,4 +149,4 @@ class StockMoveCdgItem(models.Model):
         required=True,
         default='QBLI',
     )
-    vlr_codigo = fields.Char(string='Valor Código')
+    vlr_codigo = fields.Char(string='Valor Código', required=True)
